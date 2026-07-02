@@ -1,7 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import { getScoreColor, formatScore } from '../utils/helpers';
 
-export default function QueryTable({ queries, categoryKey }) {
+export default function QueryTable({ queries= [], categoryKey }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <table className="w-full border-collapse text-left text-sm text-slate-500 dark:text-slate-400">
@@ -15,27 +17,35 @@ export default function QueryTable({ queries, categoryKey }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-          {queries.map((query) => {
-            const colors = getScoreColor(query.distance_score);
+          {queries.map((query, index) => {
+            // 1. Updated from query.distance_score to query.score to match backend payload
+            const liveScore = query.score ?? 0;
+            const colors = getScoreColor(liveScore);
+            
+            // Generate fallback values for UI display safely
+            const displayName = query.metric ? query.metric.replace(/_/g, ' ') : 'Unknown Operation';
+            const safeAbbr = query.query_id || 'METRIC';
+            const safeId = query.query_id || index;
+
             return (
-              <tr key={query.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
-                <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
-                  {query.name}
+              <tr key={safeId} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
+                <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white capitalize">
+                  {displayName}
                 </td>
                 <td className="px-6 py-4 font-mono text-xs text-slate-500">
-                  {query.abbreviation}
+                  {safeAbbr}
                 </td>
                 <td className="px-6 py-4 font-mono font-medium text-slate-900 dark:text-slate-100">
-                  {formatScore(query.distance_score)}
+                  {formatScore(liveScore)}
                 </td>
                 <td className="px-6 py-4">
                   <span className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium border ${colors.border} ${colors.bg} ${colors.text}`}>
-                    {colors.label}
+                    {colors.text?.includes('emerald') ? 'Excellent' : colors.text?.includes('amber') ? 'Moderate' : 'Poor'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <Link 
-                    href={`/dashboard/${categoryKey}/${query.id}`}
+                    href={`/dashboard/${categoryKey}/${safeId}`}
                     className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:text-indigo-600 transition-all dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
                   >
                     View Details

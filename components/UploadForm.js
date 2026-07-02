@@ -9,18 +9,46 @@ export default function UploadForm() {
   const [syntheticFile, setSyntheticFile] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (!realFile || !syntheticFile) return;
 
-    setIsSimulating(true);
-    
-    //showing frontend upload delay before routing
-    setTimeout(() => {
-      setIsSimulating(false);
-      router.push('/dashboard');
-    }, 1200);
-  };
+  const handleFormSubmit = async (e) => {
+  e.preventDefault();
+  if (!realFile || !syntheticFile) return;
+
+  setIsSimulating(true);
+
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+    // 1. Tell the backend to prepare the datasets inside DuckDB
+    const uploadResponse = await fetch(`${backendUrl}/load-datasets`, {
+      method: 'POST',
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error('Backend failed to load the datasets into DuckDB.');
+    }
+    const uploadData = await uploadResponse.json();
+    console.log('Ingestion success:', uploadData);
+
+    // 2. Trigger the statistical calculations
+    const evalResponse = await fetch(`${backendUrl}/evaluate-seq`);
+    if (!evalResponse.ok) {
+      throw new Error('Backend evaluation metrics calculation failed.');
+    }
+    const liveEvaluationData = await evalResponse.json();
+
+    // 3. Store the live calculation result into browser storage
+    localStorage.setItem('syntheticEvalData', JSON.stringify(liveEvaluationData));
+
+    setIsSimulating(false);
+    router.push('/dashboard'); // Go to dashboard page!
+
+  } catch (error) {
+    console.error('Connection Error:', error);
+    setIsSimulating(false);
+    alert(`Failed to analyze datasets: ${error.message}`);
+  }
+};
 
   return (
     <form onSubmit={handleFormSubmit} className="w-full max-w-2xl space-y-6 bg-white p-8 rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700">

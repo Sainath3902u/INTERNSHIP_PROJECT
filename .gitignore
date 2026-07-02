@@ -1,5 +1,15 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Ignore the local DuckDB database file
+*.db
+*.db.wal
+benchmark.db
+benchmark.db.wal
+
+# Ignore any raw dataset CSV files
+*.csv
+
+
 # dependencies
 /node_modules
 /.pnp
