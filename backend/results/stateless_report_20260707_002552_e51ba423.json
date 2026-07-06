@@ -1,0 +1,533 @@
+{
+  "overall": {
+    "avg": 0.3221,
+    "median": 0.3417,
+    "min": 0.0207,
+    "max": 0.7858,
+    "std": 0.266,
+    "count": 21
+  },
+  "percentiles": {
+    "5": 0.0209,
+    "10": 0.0255,
+    "20": 0.0306,
+    "25": 0.04,
+    "30": 0.043,
+    "40": 0.0961,
+    "50": 0.3417,
+    "60": 0.495,
+    "70": 0.5307,
+    "75": 0.5644,
+    "80": 0.5689,
+    "90": 0.6252,
+    "95": 0.7211
+  },
+  "by_category": {
+    "flow_srcip": {
+      "avg": 0.4279,
+      "min": 0.0207,
+      "max": 0.7858,
+      "count": 7
+    },
+    "flow_dstip": {
+      "avg": 0.4159,
+      "min": 0.0306,
+      "max": 0.7211,
+      "count": 7
+    },
+    "flow_ippair": {
+      "avg": 0.1549,
+      "min": 0.0255,
+      "max": 0.3417,
+      "count": 5
+    },
+    "flow_fivetuple": {
+      "avg": 0.0415,
+      "min": 0.04,
+      "max": 0.043,
+      "count": 2
+    }
+  },
+  "by_metric_type": {
+    "topnvalue": {
+      "avg": 0.3221,
+      "min": 0.0207,
+      "max": 0.7858,
+      "count": 21
+    }
+  },
+  "best_5": [
+    {
+      "query_id": "SI-BYTE",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Total bytes per source IP",
+      "metric": "flow_srcip_stateless_bytes_topnvalue",
+      "score": 0.0207,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          516708751.0,
+          289455316.0,
+          285573356.0,
+          189855349.0,
+          167945253.0,
+          166393166.0,
+          161396492.0,
+          160868384.0,
+          159446484.0,
+          154844182.0
+        ],
+        "synthetic": [
+          520705214.0,
+          301040453.0,
+          280524935.0,
+          185347513.0,
+          182324649.0,
+          175533663.0,
+          175439349.0,
+          164295838.0,
+          151292948.0,
+          149811423.0
+        ]
+      }
+    },
+    {
+      "query_id": "SI-PKT",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Number of packets per source IP",
+      "metric": "flow_srcip_stateless_packet_topnvalue",
+      "score": 0.0209,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          937567.0,
+          363138.0,
+          312707.0,
+          238857.0,
+          208417.0,
+          203944.0,
+          201222.0,
+          147434.0,
+          139066.0,
+          121597.0
+        ],
+        "synthetic": [
+          1048129.0,
+          364132.0,
+          306214.0,
+          249045.0,
+          220210.0,
+          212116.0,
+          196214.0,
+          153241.0,
+          134003.0,
+          127315.0
+        ]
+      }
+    },
+    {
+      "query_id": "PR-BYTE",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Total bytes per source-destination IP pair",
+      "metric": "flow_ippair_stateless_bytes_topnvalue",
+      "score": 0.0255,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          489047009.0,
+          289455316.0,
+          251395010.0,
+          166393166.0,
+          161396492.0,
+          160868384.0,
+          159446484.0,
+          154844182.0,
+          91814672.0,
+          88667880.0
+        ],
+        "synthetic": [
+          495012826.0,
+          301031849.0,
+          253505617.0,
+          182314236.0,
+          175526418.0,
+          175433479.0,
+          151284344.0,
+          149811423.0,
+          92045633.0,
+          80200474.0
+        ]
+      }
+    },
+    {
+      "query_id": "PR-PKT",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Number of packets per source-destination IP pair",
+      "metric": "flow_ippair_stateless_packet_topnvalue",
+      "score": 0.0289,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          343391.0,
+          203944.0,
+          176928.0,
+          116074.0,
+          113882.0,
+          112783.0,
+          111861.0,
+          110129.0,
+          109644.0,
+          106364.0
+        ],
+        "synthetic": [
+          346141.0,
+          212110.0,
+          177230.0,
+          128032.0,
+          127307.0,
+          125443.0,
+          122826.0,
+          122442.0,
+          108932.0,
+          105654.0
+        ]
+      }
+    },
+    {
+      "query_id": "DI-BYTE",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Total bytes per destination IP",
+      "metric": "flow_dstip_stateless_bytes_topnvalue",
+      "score": 0.0306,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          2677983241.0,
+          670440528.0,
+          627311742.0,
+          344129390.0,
+          56274609.0,
+          11367052.0,
+          9145756.0,
+          8737664.0,
+          7536909.0,
+          6915150.0
+        ],
+        "synthetic": [
+          2663776910.0,
+          643371301.0,
+          594286601.0,
+          334959375.0,
+          49416328.0,
+          12159107.0,
+          8670341.0,
+          8276887.0,
+          7965429.0,
+          7835011.0
+        ]
+      }
+    }
+  ],
+  "worst_5": [
+    {
+      "query_id": "SI-CD-DSTIP",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Distinct destination IPs contacted per source IP",
+      "metric": "flow_srcip_stateless_connection2dstip_topnvalue",
+      "score": 0.7858,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          1249.0,
+          589.0,
+          554.0,
+          451.0,
+          210.0,
+          12.0,
+          7.0,
+          7.0,
+          6.0,
+          5.0
+        ],
+        "synthetic": [
+          10862.0,
+          3993.0,
+          3971.0,
+          2916.0,
+          1076.0,
+          169.0,
+          123.0,
+          102.0,
+          50.0,
+          34.0
+        ]
+      }
+    },
+    {
+      "query_id": "DI-CD-SRCIP",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Distinct source IPs contacting each destination IP",
+      "metric": "flow_dstip_stateless_connection2srcip_topnvalue",
+      "score": 0.7211,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          1224.0,
+          572.0,
+          535.0,
+          437.0,
+          194.0,
+          8.0,
+          7.0,
+          7.0,
+          7.0,
+          7.0
+        ],
+        "synthetic": [
+          10216.0,
+          3933.0,
+          3849.0,
+          2813.0,
+          820.0,
+          65.0,
+          42.0,
+          40.0,
+          39.0,
+          37.0
+        ]
+      }
+    },
+    {
+      "query_id": "SI-CD-DSTIPPORT",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Distinct destination IP and destination port pairs contacted per source IP",
+      "metric": "flow_srcip_stateless_connection2dstipport_topnvalue",
+      "score": 0.6252,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          32105.0,
+          1333.0,
+          1156.0,
+          874.0,
+          762.0,
+          740.0,
+          665.0,
+          621.0,
+          617.0,
+          582.0
+        ],
+        "synthetic": [
+          33830.0,
+          11415.0,
+          4991.0,
+          4255.0,
+          4180.0,
+          4140.0,
+          3567.0,
+          3436.0,
+          3402.0,
+          3191.0
+        ]
+      }
+    },
+    {
+      "query_id": "SI-CD-DSTPORT",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Distinct destination ports contacted per source IP",
+      "metric": "flow_srcip_stateless_connection2dstport_topnvalue",
+      "score": 0.5745,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          17504.0,
+          1156.0,
+          859.0,
+          761.0,
+          732.0,
+          640.0,
+          572.0,
+          544.0,
+          518.0,
+          487.0
+        ],
+        "synthetic": [
+          18300.0,
+          3707.0,
+          3579.0,
+          3345.0,
+          3191.0,
+          3022.0,
+          3010.0,
+          2896.0,
+          2456.0,
+          2399.0
+        ]
+      }
+    },
+    {
+      "query_id": "DI-CD-SRCIPPORT",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Distinct source IP and source port pairs per destination IP",
+      "metric": "flow_dstip_stateless_connection2srcipport_topnvalue",
+      "score": 0.5689,
+      "visualization": {
+        "type": "grouped_bar",
+        "flag": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          32103.0,
+          9289.0,
+          1282.0,
+          1157.0,
+          879.0,
+          764.0,
+          739.0,
+          681.0,
+          645.0,
+          630.0
+        ],
+        "synthetic": [
+          33267.0,
+          10577.0,
+          9723.0,
+          6635.0,
+          4413.0,
+          4115.0,
+          4076.0,
+          3727.0,
+          3610.0,
+          3578.0
+        ]
+      }
+    }
+  ]
+}

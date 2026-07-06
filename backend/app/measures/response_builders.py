@@ -172,4 +172,3 @@ def build_topn(score, labels, real, synthetic):
             "synthetic": [float(x) for x in synthetic]
         }
     }
-

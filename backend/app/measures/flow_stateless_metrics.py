@@ -1,16 +1,11 @@
-import sys
-import os
 import pandas as pd
 import numpy as np
 from scipy.spatial.distance import jensenshannon
 from scipy.stats import wasserstein_distance
 from tqdm import tqdm
 
-from app.measures.packet_metrics import (
-    build_topn,
-    build_distribution,
-    build_topnkey
-)
+from app.measures.response_builders import *
+
 
 def jensenshannon_wrapper(real_df_1, gen_df_2, base=2):
     """
@@ -92,17 +87,6 @@ def flow_srcip_stateless_packet_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the packet counts
     for the top N source IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, COUNT(*) AS pkts
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY pkts DESC
-
-        Therefore, each DataFrame contains one row per source IP with
-        the aggregated packet count in the 'pkts' column.
     """
 
     # Extract top-N packet counts from SQL aggregation results
@@ -127,16 +111,6 @@ def flow_srcip_stateless_bytes_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the total bytes
     for the top N source IPs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, SUM(pkt_len) AS bytes
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY bytes DESC
-
-    Each DataFrame contains one row per source IP with the
-    aggregated byte count in the 'bytes' column.
     """
 
     real_bytes = real_df_1["bytes"].to_numpy()[:n]
@@ -160,16 +134,6 @@ def flow_srcip_stateless_bytes_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of total bytes per source IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, SUM(pkt_len) AS bytes
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY bytes DESC
-
-    Each DataFrame contains one row per source IP with the
-    aggregated byte count in the 'bytes' column.
     """
 
     real_bytes = real_df_1["bytes"].to_numpy()
@@ -205,16 +169,6 @@ def flow_srcip_stateless_connection2srcport_topnvalue(real_df_1, gen_df_2, n=10)
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct source ports for the top N source IPs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, COUNT(DISTINCT srcport) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per source IP with the
-    distinct source-port count in the 'n' column.
     """
 
     real_conn = real_df_1["n"].to_numpy()[:n]
@@ -238,16 +192,6 @@ def flow_srcip_stateless_connection2srcport_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct source-port counts per source IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, COUNT(DISTINCT srcport) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per source IP with the
-    distinct source-port count in the 'n' column.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -283,16 +227,6 @@ def flow_srcip_stateless_connection2dstip_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct destination IPs contacted by the top N source IPs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, COUNT(DISTINCT dstip) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per source IP with the
-    distinct destination-IP count in the 'n' column.
     """
 
     real_conn = real_df_1["n"].to_numpy()[:n]
@@ -316,16 +250,6 @@ def flow_srcip_stateless_connection2dstip_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct destination-IP counts per source IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, COUNT(DISTINCT dstip) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per source IP with the
-    distinct destination-IP count in the 'n' column.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -361,16 +285,6 @@ def flow_srcip_stateless_connection2dstport_topnvalue(real_df_1, gen_df_2, n=10)
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct destination ports contacted by the top N source IPs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, COUNT(DISTINCT dstport) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per source IP with the
-    distinct destination-port count in the 'n' column.
     """
 
     real_conn = real_df_1["n"].to_numpy()[:n]
@@ -394,16 +308,6 @@ def flow_srcip_stateless_connection2dstport_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct destination-port counts per source IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, COUNT(DISTINCT dstport) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per source IP with the
-    distinct destination-port count in the 'n' column.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -439,18 +343,6 @@ def flow_srcip_stateless_connection2dstipport_topnvalue(real_df_1, gen_df_2, n=1
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct (dstip, dstport) pairs contacted by the top N source IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, COUNT(DISTINCT (dstip, dstport)) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-        Therefore, each DataFrame contains one row per source IP with
-        the distinct (destination IP, destination port) pair count
-        in the 'n' column.
     """
 
     # Extract top-N distinct (dstip, dstport) pair counts
@@ -475,17 +367,6 @@ def flow_srcip_stateless_connection2dstipport_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct (dstip, dstport) pair counts per source IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip,
-               COUNT(DISTINCT (dstip, dstport)) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per source IP with the
-    distinct (dstip, dstport) pair count in column 'n'.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -521,18 +402,6 @@ def flow_srcip_stateless_connection2flow_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct 5-tuple flows per source IP for the top N source IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip,
-               COUNT(DISTINCT (srcip, dstip, srcport, dstport, proto)) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-        Therefore, each DataFrame contains one row per source IP with
-        the distinct flow count in the 'n' column.
     """
 
     # Extract top-N flow counts from SQL aggregation results
@@ -557,17 +426,6 @@ def flow_srcip_stateless_connection2flow_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct 5-tuple flow counts per source IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip,
-               COUNT(DISTINCT (srcip, dstip, srcport, dstport, proto)) AS n
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per source IP with the
-    distinct flow count in column 'n'.
     """
 
     real_counts = real_df_1["n"].to_numpy()
@@ -605,17 +463,6 @@ def flow_dstip_stateless_packet_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the packet counts
     for the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, COUNT(*) AS pkts
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY pkts DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the aggregated packet count in the 'pkts' column.
     """
 
     # Extract top-N packet counts from SQL aggregation results
@@ -640,17 +487,6 @@ def flow_dstip_stateless_bytes_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the total bytes
     for the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, SUM(pkt_len) AS bytes
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY bytes DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the aggregated byte count in the 'bytes' column.
     """
 
     # Extract top-N byte counts from SQL aggregation results
@@ -675,16 +511,6 @@ def flow_dstip_stateless_bytes_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of total bytes per destination IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, SUM(pkt_len) AS bytes
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY bytes DESC
-
-    Each DataFrame contains one row per destination IP with the
-    aggregated byte count in the 'bytes' column.
     """
 
     real_bytes = real_df_1["bytes"].to_numpy()
@@ -720,17 +546,6 @@ def flow_dstip_stateless_connection2dstport_topnvalue(real_df_1, gen_df_2, n=10)
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct destination ports for the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, COUNT(DISTINCT dstport) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the distinct destination-port count in the 'n' column.
     """
 
     # Extract top-N distinct destination-port counts from SQL aggregation results
@@ -755,16 +570,6 @@ def flow_dstip_stateless_connection2dstport_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct destination-port counts per destination IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, COUNT(DISTINCT dstport) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per destination IP with the
-    distinct destination-port count in column 'n'.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -800,17 +605,6 @@ def flow_dstip_stateless_connection2srcip_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct source IPs contacting the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, COUNT(DISTINCT srcip) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the distinct source-IP count in the 'n' column.
     """
 
     # Extract top-N distinct source-IP counts from SQL aggregation results
@@ -835,16 +629,6 @@ def flow_dstip_stateless_connection2srcip_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct source-IP counts per destination IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, COUNT(DISTINCT srcip) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per destination IP with the
-    distinct source-IP count in column 'n'.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -880,17 +664,6 @@ def flow_dstip_stateless_connection2srcport_topnvalue(real_df_1, gen_df_2, n=10)
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct source ports for the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, COUNT(DISTINCT srcport) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the distinct source-port count in the 'n' column.
     """
 
     # Extract top-N distinct source-port counts from SQL aggregation results
@@ -915,16 +688,6 @@ def flow_dstip_stateless_connection2srcport_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct source-port counts per destination IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, COUNT(DISTINCT srcport) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per destination IP with the
-    distinct source-port count in column 'n'.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -960,17 +723,6 @@ def flow_dstip_stateless_connection2srcipport_topnvalue(real_df_1, gen_df_2, n=1
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct (srcip, srcport) pairs associated with the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, COUNT(DISTINCT (srcip, srcport)) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the distinct (source IP, source port) pair count in the 'n' column.
     """
 
     # Extract top-N distinct (srcip, srcport) pair counts
@@ -995,17 +747,6 @@ def flow_dstip_stateless_connection2srcipport_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct (srcip, srcport) pair counts per destination IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT dstip,
-               COUNT(DISTINCT (srcip, srcport)) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per destination IP with the
-    distinct (source IP, source port) pair count in column 'n'.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -1041,17 +782,6 @@ def flow_dstip_stateless_connection2flow_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct 5-tuple flows per destination IP for the top N destination IPs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT dstip,
-               COUNT(DISTINCT (srcip, dstip, srcport, dstport, proto)) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per destination IP with the
-    distinct flow count in column 'n'.
     """
 
     real_top = real_df_1["n"].to_numpy()[:n]
@@ -1075,17 +805,6 @@ def flow_dstip_stateless_connection2flow_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct 5-tuple flow counts per destination IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT dstip,
-               COUNT(DISTINCT (srcip, dstip, srcport, dstport, proto)) AS n
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per destination IP with the
-    distinct flow count in column 'n'.
     """
 
     real_counts = real_df_1["n"].to_numpy()
@@ -1123,16 +842,6 @@ def flow_ippair_stateless_packet_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the packet counts
     for the top N source-destination IP pairs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, COUNT(*) AS pkts
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY pkts DESC
-
-    Each DataFrame contains one row per (srcip, dstip) pair
-    with the aggregated packet count in the 'pkts' column.
     """
 
     real_counts = real_df_1["pkts"].to_numpy()[:n]
@@ -1156,16 +865,6 @@ def flow_ippair_stateless_packet_distribution(real_df_1, gen_df_2, n=10):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the packet-count
     distributions of source-destination IP pairs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, COUNT(*) AS pkts
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY pkts DESC
-
-    Each DataFrame contains one row per (srcip, dstip) pair
-    with the aggregated packet count in the 'pkts' column.
     """
 
     real_counts = real_df_1["pkts"].to_numpy()
@@ -1201,17 +900,6 @@ def flow_ippair_stateless_bytes_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the total bytes
     for the top N source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, SUM(pkt_len) AS bytes
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY bytes DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the aggregated byte count in the 'bytes' column.
     """
 
     # Extract top-N byte counts from SQL aggregation results
@@ -1236,16 +924,6 @@ def flow_ippair_stateless_bytes_distribution(real_df_1, gen_df_2, n=10):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the byte-count
     distributions of source-destination IP pairs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, SUM(pkt_len) AS bytes
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY bytes DESC
-
-    Each DataFrame contains one row per (srcip, dstip) pair
-    with the aggregated byte count in the 'bytes' column.
     """
 
     real_bytes = real_df_1["bytes"].to_numpy()
@@ -1281,16 +959,6 @@ def flow_ippair_stateless_connection2srcport_topnvalue(real_df_1, gen_df_2, n=10
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct source ports for the top N source-destination IP pairs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, COUNT(DISTINCT srcport) AS n
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per (srcip, dstip) pair
-    with the distinct source-port count in column 'n'.
     """
 
     real_top = real_df_1["n"].to_numpy()[:n]
@@ -1314,16 +982,6 @@ def flow_ippair_stateless_connection2srcport_distribution(real_df_1, gen_df_2, n
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct source-port counts per source-destination IP pair.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, COUNT(DISTINCT srcport) AS n
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per (srcip, dstip) pair
-    with the distinct source-port count in column 'n'.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -1359,17 +1017,6 @@ def flow_ippair_stateless_connection2dstport_topnvalue(real_df_1, gen_df_2, n=10
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct destination ports for the top N source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, COUNT(DISTINCT dstport) AS n
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY n DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the distinct destination-port count in the 'n' column.
     """
 
     # Extract top-N distinct destination-port counts from SQL aggregation results
@@ -1394,16 +1041,6 @@ def flow_ippair_stateless_connection2dstport_distribution(real_df_1, gen_df_2, n
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct destination-port counts per source-destination IP pair.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, COUNT(DISTINCT dstport) AS n
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per (srcip, dstip) pair
-    with the distinct destination-port count in column 'n'.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -1439,18 +1076,6 @@ def flow_ippair_stateless_connection2flow_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the number of
     distinct 5-tuple flows for the top N source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip,
-               COUNT(DISTINCT (srcip, dstip, srcport, dstport, proto)) AS n
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY n DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the distinct flow count in the 'n' column.
     """
 
     # Extract top-N flow counts from SQL aggregation results
@@ -1475,17 +1100,6 @@ def flow_ippair_stateless_connection2flow_distribution(real_df_1, gen_df_2, n=10
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of distinct 5-tuple flow counts per source-destination IP pair.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip,
-               COUNT(DISTINCT (srcip, dstip, srcport, dstport, proto)) AS n
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY n DESC
-
-    Each DataFrame contains one row per (srcip, dstip) pair
-    with the distinct flow count in column 'n'.
     """
 
     real_conn = real_df_1["n"].to_numpy()
@@ -1523,18 +1137,6 @@ def flow_fivetuple_stateless_packet_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the packet counts
     for the top N 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, srcport, dstport, proto,
-               COUNT(*) AS pkts
-        FROM <table_name>
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        ORDER BY pkts DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the aggregated packet count in the 'pkts' column.
     """
 
     # Extract top-N packet counts from SQL aggregation results
@@ -1543,6 +1145,7 @@ def flow_fivetuple_stateless_packet_topnvalue(real_df_1, gen_df_2, n=10):
 
     # Pad with zeros if one array is shorter
     max_len = max(len(real_counts), len(gen_counts))
+    
     real_counts = np.pad(real_counts, (0, max_len - len(real_counts)))
     gen_counts = np.pad(gen_counts, (0, max_len - len(gen_counts)))
 
@@ -1559,17 +1162,6 @@ def flow_fivetuple_stateless_packet_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between packet-count
     distributions of 5-tuple flows.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, srcport, dstport, proto,
-               COUNT(*) AS pkts
-        FROM <table_name>
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        ORDER BY pkts DESC
-
-    Each DataFrame contains one row per flow with
-    the aggregated packet count in the 'pkts' column.
     """
 
     real_counts = real_df_1["pkts"].to_numpy()
@@ -1605,25 +1197,15 @@ def flow_fivetuple_stateless_bytes_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the total bytes
     for the top N 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, srcport, dstport, proto,
-               SUM(pkt_len) AS bytes
-        FROM <table_name>
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        ORDER BY bytes DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the aggregated byte count in the 'bytes' column.
     """
 
     # Extract top-N byte counts from SQL aggregation results
     real_bytes = real_df_1["bytes"].to_numpy()[:n]
     gen_bytes = gen_df_2["bytes"].to_numpy()[:n]
+    
     # Pad with zeros if one array is shorter
     max_len = max(len(real_bytes), len(gen_bytes))
+    
     real_bytes = np.pad(real_bytes, (0, max_len - len(real_bytes)))
     gen_bytes = np.pad(gen_bytes, (0, max_len - len(gen_bytes)))
 
@@ -1640,17 +1222,6 @@ def flow_fivetuple_stateless_bytes_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between byte-count
     distributions of 5-tuple flows.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, srcport, dstport, proto,
-               SUM(pkt_len) AS bytes
-        FROM <table_name>
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        ORDER BY bytes DESC
-
-    Each DataFrame contains one row per flow with
-    the aggregated byte count in the 'bytes' column.
     """
 
     real_bytes = real_df_1["bytes"].to_numpy()
