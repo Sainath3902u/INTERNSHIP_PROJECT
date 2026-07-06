@@ -1,50 +1,31 @@
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import RankShareChart from './charts/RankShareChart';
+import BarComparisonChart from './charts/BarComparisonChart';
+import CategoryDistributionChart from './charts/GroupedBarChart';
+import OverlayLineChart from './charts/OverlayLineChart';
 
 export default function ComparisonChart({ chartData }) {
-  return (
-    <div className="w-full h-[400px] bg-white p-4 rounded-xl border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={chartData}
-          margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-slate-800" />
-          <XAxis 
-            dataKey="name" 
-            tick={{ fill: '#64748B', fontSize: 12 }}
-            axisLine={{ stroke: '#CBD5E1' }}
-          />
-          <YAxis 
-            tick={{ fill: '#64748B', fontSize: 12 }}
-            axisLine={{ stroke: '#CBD5E1' }}
-          />
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: '#1E293B', 
-              borderRadius: '8px', 
-              color: '#F8FAFC',
-              border: 'none'
-            }} 
-          />
-          <Legend verticalAlign="top" height={36} iconType="circle" />
-          
-          {/* Side-by-Side Evaluation Target Metrics */}
-          <Bar 
-            name="Real Data Distribution" 
-            dataKey="real" 
-            fill="#4F46E5" 
-            radius={[4, 4, 0, 0]} 
-          />
-          <Bar 
-            name="Synthetic Data Distribution" 
-            dataKey="synthetic" 
-            fill="#06B6D4" 
-            radius={[4, 4, 0, 0]} 
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
+  if (!chartData) return null;
+
+  switch (chartData.type) {
+    case 'distribution':
+      return <RankShareChart chartData={chartData} />;
+
+    case 'dual_bar':
+      return <BarComparisonChart chartData={chartData} />;
+
+    case 'grouped_bar':
+      return <CategoryDistributionChart chartData={chartData} />
+
+    case 'overlay_line':
+      return <OverlayLineChart chartData={chartData} />
+
+    default:
+      return (
+        <div className="p-8 text-center">
+          Unsupported visualization type
+        </div>
+      );
+  }
 }

@@ -6,6 +6,12 @@ from scipy.spatial.distance import jensenshannon
 from scipy.stats import wasserstein_distance
 from tqdm import tqdm
 
+from app.measures.packet_metrics import (
+    build_topn,
+    build_distribution,
+    build_topnkey
+)
+
 def jensenshannon_wrapper(real_df_1, gen_df_2, base=2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between two distributions.
@@ -117,7 +123,14 @@ def flow_srcip_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=10):
     real_intervals = np.pad(real_intervals, (0, max_len - len(real_intervals)))
     gen_intervals = np.pad(gen_intervals, (0, max_len - len(gen_intervals)))
 
-    return topn_value_distance(real_intervals, gen_intervals)
+    score = topn_value_distance(real_intervals, gen_intervals)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_intervals,
+        gen_intervals
+    )
 
 def flow_srcip_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2):
     """
@@ -165,7 +178,14 @@ def flow_srcip_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_srcip_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -193,7 +213,14 @@ def flow_srcip_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     real_top = np.pad(real_top, (0, max_len - len(real_top)))
     gen_top = np.pad(gen_top, (0, max_len - len(gen_top)))
 
-    return topn_value_distance(real_top, gen_top)
+    score = topn_value_distance(real_top, gen_top)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_top,
+        gen_top
+    )
 
 def flow_srcip_stateful_flowduration_distribution(real_df_1, gen_df_2):
     """
@@ -232,7 +259,14 @@ def flow_srcip_stateful_flowduration_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_srcip_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -266,7 +300,14 @@ def flow_srcip_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     real_rates = np.pad(real_rates, (0, max_len - len(real_rates)))
     gen_rates = np.pad(gen_rates, (0, max_len - len(gen_rates)))
 
-    return topn_value_distance(real_rates, gen_rates)
+    score = topn_value_distance(real_rates, gen_rates)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_rates,
+        gen_rates
+    )
 
 def flow_srcip_stateful_byterate_distribution(real_df_1, gen_df_2):
     """
@@ -310,7 +351,14 @@ def flow_srcip_stateful_byterate_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_srcip_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -330,7 +378,14 @@ def flow_srcip_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     real_topn = np.pad(real_topn, (0, max_len - len(real_topn)))
     gen_topn = np.pad(gen_topn, (0, max_len - len(gen_topn)))
 
-    return topn_value_distance(real_topn, gen_topn)
+    score = topn_value_distance(real_topn, gen_topn)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_topn,
+        gen_topn
+    )
 
 def flow_srcip_stateful_std_interarrival_distribution(real_df_1, gen_df_2, n=10):
     """
@@ -362,7 +417,14 @@ def flow_srcip_stateful_std_interarrival_distribution(real_df_1, gen_df_2, n=10)
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_srcip_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -382,7 +444,14 @@ def flow_srcip_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     real_topn = np.pad(real_topn, (0, max_len - len(real_topn)))
     gen_topn = np.pad(gen_topn, (0, max_len - len(gen_topn)))
 
-    return topn_value_distance(real_topn, gen_topn)
+    score = topn_value_distance(real_topn, gen_topn)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_topn,
+        gen_topn
+    )
 
 def flow_srcip_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     """
@@ -414,7 +483,14 @@ def flow_srcip_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 
 # Per Destination IP
@@ -453,7 +529,14 @@ def flow_dstip_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=10):
     real_intervals = np.pad(real_intervals, (0, max_len - len(real_intervals)))
     gen_intervals = np.pad(gen_intervals, (0, max_len - len(gen_intervals)))
 
-    return topn_value_distance(real_intervals, gen_intervals)
+    score = topn_value_distance(real_intervals, gen_intervals)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_intervals,
+        gen_intervals
+    )
 
 def flow_dstip_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2):
     """
@@ -485,7 +568,14 @@ def flow_dstip_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_dstip_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -513,7 +603,14 @@ def flow_dstip_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     real_top = np.pad(real_top, (0, max_len - len(real_top)))
     gen_top = np.pad(gen_top, (0, max_len - len(gen_top)))
 
-    return topn_value_distance(real_top, gen_top)
+    score = topn_value_distance(real_top, gen_top)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_top,
+        gen_top
+    )
 
 def flow_dstip_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
     """
@@ -560,7 +657,14 @@ def flow_dstip_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
     real_sorted = np.sort(real_dist)[::-1]
     gen_sorted = np.sort(gen_dist)[::-1]
 
-    return jensenshannon_wrapper(real_sorted, gen_sorted, base=2)
+    score = jensenshannon_wrapper(real_sorted, gen_sorted, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max(len(real_sorted), len(gen_sorted)))],
+        real_sorted,
+        gen_sorted
+    )
 
 def flow_dstip_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -594,7 +698,14 @@ def flow_dstip_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     real_rates = np.pad(real_rates, (0, max_len - len(real_rates)))
     gen_rates = np.pad(gen_rates, (0, max_len - len(gen_rates)))
 
-    return topn_value_distance(real_rates, gen_rates)
+    score = topn_value_distance(real_rates, gen_rates)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_rates,
+        gen_rates
+    )
 
 def flow_dstip_stateful_byterate_distribution(real_df_1, gen_df_2):
     """
@@ -646,7 +757,14 @@ def flow_dstip_stateful_byterate_distribution(real_df_1, gen_df_2):
     real_sorted = np.sort(real_dist)[::-1]
     gen_sorted = np.sort(gen_dist)[::-1]
 
-    return jensenshannon_wrapper(real_sorted, gen_sorted, base=2)
+    score = jensenshannon_wrapper(real_sorted, gen_sorted, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max(len(real_sorted), len(gen_sorted)))],
+        real_sorted,
+        gen_sorted
+    )
 
 def flow_dstip_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -685,7 +803,14 @@ def flow_dstip_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     real_topn = np.pad(real_topn, (0, max_len - len(real_topn)))
     gen_topn = np.pad(gen_topn, (0, max_len - len(gen_topn)))
 
-    return topn_value_distance(real_topn, gen_topn)
+    score = topn_value_distance(real_topn, gen_topn)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_topn,
+        gen_topn
+    )
 
 def flow_dstip_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
     """
@@ -737,7 +862,14 @@ def flow_dstip_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_dstip_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -776,7 +908,14 @@ def flow_dstip_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     real_topn = np.pad(real_topn, (0, max_len - len(real_topn)))
     gen_topn = np.pad(gen_topn, (0, max_len - len(gen_topn)))
 
-    return topn_value_distance(real_topn, gen_topn)
+    score = topn_value_distance(real_topn, gen_topn)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_topn,
+        gen_topn
+    )
 
 def flow_dstip_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     """
@@ -831,7 +970,14 @@ def flow_dstip_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 
 # Per IP Pair
@@ -871,7 +1017,14 @@ def flow_ippair_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=10):
     real_intervals = np.pad(real_intervals, (0, max_len - len(real_intervals)))
     gen_intervals = np.pad(gen_intervals, (0, max_len - len(gen_intervals)))
 
-    return topn_value_distance(real_intervals, gen_intervals)
+    score = topn_value_distance(real_intervals, gen_intervals)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_intervals,
+        gen_intervals
+    )
 
 def flow_ippair_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2, n=10):
     """
@@ -923,7 +1076,14 @@ def flow_ippair_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2, n=1
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_ippair_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -951,7 +1111,14 @@ def flow_ippair_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     real_top = np.pad(real_top, (0, max_len - len(real_top)))
     gen_top = np.pad(gen_top, (0, max_len - len(gen_top)))
 
-    return topn_value_distance(real_top, gen_top)
+    score = topn_value_distance(real_top, gen_top)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_top,
+        gen_top
+    )
 
 def flow_ippair_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
     """
@@ -995,7 +1162,14 @@ def flow_ippair_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_ippair_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -1030,7 +1204,14 @@ def flow_ippair_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     real_rates = np.pad(real_rates, (0, max_len - len(real_rates)))
     gen_rates = np.pad(gen_rates, (0, max_len - len(gen_rates)))
 
-    return topn_value_distance(real_rates, gen_rates)
+    score = topn_value_distance(real_rates, gen_rates)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_rates,
+        gen_rates
+    )
 
 def flow_ippair_stateful_byterate_distribution(real_df_1, gen_df_2, n=10):
     """
@@ -1079,7 +1260,14 @@ def flow_ippair_stateful_byterate_distribution(real_df_1, gen_df_2, n=10):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_ippair_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -1119,7 +1307,14 @@ def flow_ippair_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     real_topn = np.pad(real_topn, (0, max_len - len(real_topn)))
     gen_topn = np.pad(gen_topn, (0, max_len - len(gen_topn)))
 
-    return topn_value_distance(real_topn, gen_topn)
+    score = topn_value_distance(real_topn, gen_topn)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_topn,
+        gen_topn
+    )
 
 def flow_ippair_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
     """
@@ -1173,7 +1368,14 @@ def flow_ippair_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_ippair_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -1213,7 +1415,14 @@ def flow_ippair_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     real_topn = np.pad(real_topn, (0, max_len - len(real_topn)))
     gen_topn = np.pad(gen_topn, (0, max_len - len(gen_topn)))
 
-    return topn_value_distance(real_topn, gen_topn)
+    score = topn_value_distance(real_topn, gen_topn)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_topn,
+        gen_topn
+    )
 
 def flow_ippair_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     """
@@ -1270,7 +1479,14 @@ def flow_ippair_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 
 # Per 5-Tuple Flow
@@ -1310,7 +1526,14 @@ def flow_fivetuple_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=1
     real_intervals = np.pad(real_intervals, (0, max_len - len(real_intervals)))
     gen_intervals = np.pad(gen_intervals, (0, max_len - len(gen_intervals)))
 
-    return topn_value_distance(real_intervals, gen_intervals)
+    score = topn_value_distance(real_intervals, gen_intervals)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_intervals,
+        gen_intervals
+    )
 
 def flow_fivetuple_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2, n=10):
     """
@@ -1362,7 +1585,14 @@ def flow_fivetuple_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2, 
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_fivetuple_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -1391,7 +1621,14 @@ def flow_fivetuple_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     real_top = np.pad(real_top, (0, max_len - len(real_top)))
     gen_top = np.pad(gen_top, (0, max_len - len(gen_top)))
 
-    return topn_value_distance(real_top, gen_top)
+    score = topn_value_distance(real_top, gen_top)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_top,
+        gen_top
+    )
 
 def flow_fivetuple_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
     """
@@ -1434,7 +1671,14 @@ def flow_fivetuple_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10)
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_fivetuple_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -1468,7 +1712,14 @@ def flow_fivetuple_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     real_rates = np.pad(real_rates, (0, max_len - len(real_rates)))
     gen_rates = np.pad(gen_rates, (0, max_len - len(gen_rates)))
 
-    return topn_value_distance(real_rates, gen_rates)
+    score = topn_value_distance(real_rates, gen_rates)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_rates,
+        gen_rates
+    )
 
 def flow_fivetuple_stateful_byterate_distribution(real_df_1, gen_df_2, n=10):
     """
@@ -1516,7 +1767,14 @@ def flow_fivetuple_stateful_byterate_distribution(real_df_1, gen_df_2, n=10):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_fivetuple_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -1555,7 +1813,14 @@ def flow_fivetuple_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10
     real_topn = np.pad(real_topn, (0, max_len - len(real_topn)))
     gen_topn = np.pad(gen_topn, (0, max_len - len(gen_topn)))
 
-    return topn_value_distance(real_topn, gen_topn)
+    score = topn_value_distance(real_topn, gen_topn)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_topn,
+        gen_topn
+    )
 
 def flow_fivetuple_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
     """
@@ -1608,7 +1873,14 @@ def flow_fivetuple_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )
 
 def flow_fivetuple_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
@@ -1648,7 +1920,14 @@ def flow_fivetuple_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10)
     real_topn = np.pad(real_topn, (0, max_len - len(real_topn)))
     gen_topn = np.pad(gen_topn, (0, max_len - len(gen_topn)))
 
-    return topn_value_distance(real_topn, gen_topn)
+    score = topn_value_distance(real_topn, gen_topn)
+
+    return build_topn(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_topn,
+        gen_topn
+    )
 
 def flow_fivetuple_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     """
@@ -1703,4 +1982,11 @@ def flow_fivetuple_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     real_dist = np.pad(real_dist, (0, max_len - len(real_dist)))
     gen_dist = np.pad(gen_dist, (0, max_len - len(gen_dist)))
 
-    return jensenshannon_wrapper(real_dist, gen_dist, base=2)
+    score = jensenshannon_wrapper(real_dist, gen_dist, base=2)
+
+    return build_distribution(
+        score,
+        [f"Rank {i+1}" for i in range(max_len)],
+        real_dist,
+        gen_dist
+    )

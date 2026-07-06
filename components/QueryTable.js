@@ -19,11 +19,20 @@ export default function QueryTable({ queries= [], categoryKey }) {
         <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
           {queries.map((query, index) => {
             // 1. Updated from query.distance_score to query.score to match backend payload
-            const liveScore = query.score ?? 0;
+            const metricData = query.metrics?.[0] ?? {};
+
+            const liveScore = metricData.score ?? 0;
             const colors = getScoreColor(liveScore);
-            
-            // Generate fallback values for UI display safely
-            const displayName = query.metric ? query.metric.replace(/_/g, ' ') : 'Unknown Operation';
+
+            const metricName = metricData.metric;
+
+            const displayName = metricName
+              ? metricName
+                  .replace(/_+/g, ' ')
+                  .trim()
+                  .replace(/\b\w/g, c => c.toUpperCase())
+              : 'Unknown Operation';
+
             const safeAbbr = query.query_id || 'METRIC';
             const safeId = query.query_id || index;
 

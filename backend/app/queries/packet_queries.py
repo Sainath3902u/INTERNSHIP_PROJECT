@@ -212,233 +212,233 @@ PACKET_QUERIES = [
         """
     }, 
 
-    # Per Source Port Aggregations
+    # # Per Source Port Aggregations
 
-    {
-        "id": "SP-PKT",
-        "section": "Packet Level",
-        "sub_section": "Per Source Port Aggregations",
-        "description": "Packet count per source port",
-        "category": "packet_level",
+    # {
+    #     "id": "SP-PKT",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Source Port Aggregations",
+    #     "description": "Packet count per source port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_srcport_stateless_packet_topnkey",
-            "flow_srcport_stateless_packet_topnvalue"
-        ],
+    #     "metric": [
+    #         "flow_srcport_stateless_packet_topnkey",
+    #         "flow_srcport_stateless_packet_topnvalue"
+    #     ],
 
-        "sql": "SELECT srcport, COUNT(*) AS pkts FROM {table_name} GROUP BY srcport ORDER BY pkts DESC"
-    },
-    {
-        "id": "SP-BYTE",
-        "section": "Packet Level",
-        "sub_section": "Per Source Port Aggregations",
-        "description": "Total bytes per source port",
-        "category": "packet_level",
+    #     "sql": "SELECT srcport, COUNT(*) AS pkts FROM {table_name} GROUP BY srcport ORDER BY pkts DESC"
+    # },
+    # {
+    #     "id": "SP-BYTE",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Source Port Aggregations",
+    #     "description": "Total bytes per source port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_srcport_stateless_bytes_topnkey", 
-            "flow_srcport_stateless_bytes_topnvalue",
-            "flow_srcport_stateless_bytes_distribution"
-        ],
+    #     "metric": [
+    #         "flow_srcport_stateless_bytes_topnkey", 
+    #         "flow_srcport_stateless_bytes_topnvalue",
+    #         "flow_srcport_stateless_bytes_distribution"
+    #     ],
         
-        "sql": "SELECT srcport, SUM(pkt_len) AS bytes FROM {table_name} GROUP BY srcport ORDER BY bytes DESC"
-    },
-    {
-        "id": "SP-CD-SRCIP",
-        "section": "Packet Level",
-        "sub_section": "Per Source Port Aggregations",
-        "description": "Distinct source IPs per source port",
-        "category": "packet_level",
+    #     "sql": "SELECT srcport, SUM(pkt_len) AS bytes FROM {table_name} GROUP BY srcport ORDER BY bytes DESC"
+    # },
+    # {
+    #     "id": "SP-CD-SRCIP",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Source Port Aggregations",
+    #     "description": "Distinct source IPs per source port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_srcport_stateless_connection2srcip_topnkey", 
-            "flow_srcport_stateless_connection2srcip_topnvalue",
-            "flow_srcport_stateless_connection2srcip_distribution"
-        ],
+    #     "metric": [
+    #         "flow_srcport_stateless_connection2srcip_topnkey", 
+    #         "flow_srcport_stateless_connection2srcip_topnvalue",
+    #         "flow_srcport_stateless_connection2srcip_distribution"
+    #     ],
 
-        "sql": "SELECT srcport, COUNT(DISTINCT srcip) AS n FROM {table_name} GROUP BY srcport ORDER BY n DESC"
-    },
-    {
-        "id": "SP-CD-DSTIP",
-        "section": "Packet Level",
-        "sub_section": "Per Source Port Aggregations",
-        "description": "Distinct destination IPs per source port",
-        "category": "packet_level",
+    #     "sql": "SELECT srcport, COUNT(DISTINCT srcip) AS n FROM {table_name} GROUP BY srcport ORDER BY n DESC"
+    # },
+    # {
+    #     "id": "SP-CD-DSTIP",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Source Port Aggregations",
+    #     "description": "Distinct destination IPs per source port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_srcport_stateless_connection2dstip_topnkey", 
-            "flow_srcport_stateless_connection2dstip_topnvalue",
-            "flow_srcport_stateless_connection2dstip_distribution"
-        ],
+    #     "metric": [
+    #         "flow_srcport_stateless_connection2dstip_topnkey", 
+    #         "flow_srcport_stateless_connection2dstip_topnvalue",
+    #         "flow_srcport_stateless_connection2dstip_distribution"
+    #     ],
 
-        "sql": "SELECT srcport, COUNT(DISTINCT dstip) AS n FROM {table_name} GROUP BY srcport ORDER BY n DESC"
-    },
-    {
-        "id": "SP-CD-DSTPORT",
-        "section": "Packet Level",
-        "sub_section": "Per Source Port Aggregations",
-        "description": "Distinct destination ports per source port",
-        "category": "packet_level",
+    #     "sql": "SELECT srcport, COUNT(DISTINCT dstip) AS n FROM {table_name} GROUP BY srcport ORDER BY n DESC"
+    # },
+    # {
+    #     "id": "SP-CD-DSTPORT",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Source Port Aggregations",
+    #     "description": "Distinct destination ports per source port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_srcport_stateless_connection2dstport_topnkey", 
-            "flow_srcport_stateless_connection2dstport_topnvalue",
-            "flow_srcport_stateless_connection2dstport_distribution"
-        ],
+    #     "metric": [
+    #         "flow_srcport_stateless_connection2dstport_topnkey", 
+    #         "flow_srcport_stateless_connection2dstport_topnvalue",
+    #         "flow_srcport_stateless_connection2dstport_distribution"
+    #     ],
 
-        "sql": "SELECT srcport, COUNT(DISTINCT dstport) AS n FROM {table_name} GROUP BY srcport ORDER BY n DESC, srcport ASC"
-    },
-    {
-        "id": "SP-CD-DSTIPPORT",
-        "section": "Packet Level",
-        "sub_section": "Per Source Port Aggregations",
-        "description": "Distinct `(dstip, dstport)` pairs per source port",
-        "category": "packet_level",
+    #     "sql": "SELECT srcport, COUNT(DISTINCT dstport) AS n FROM {table_name} GROUP BY srcport ORDER BY n DESC, srcport ASC"
+    # },
+    # {
+    #     "id": "SP-CD-DSTIPPORT",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Source Port Aggregations",
+    #     "description": "Distinct `(dstip, dstport)` pairs per source port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_srcport_stateless_connection2dstipport_topnkey", 
-            "flow_srcport_stateless_connection2dstipport_topnvalue",
-            "flow_srcport_stateless_connection2dstipport_distribution"
-        ],
+    #     "metric": [
+    #         "flow_srcport_stateless_connection2dstipport_topnkey", 
+    #         "flow_srcport_stateless_connection2dstipport_topnvalue",
+    #         "flow_srcport_stateless_connection2dstipport_distribution"
+    #     ],
         
-        "sql": "SELECT srcport, COUNT(DISTINCT (dstip, dstport)) AS n FROM {table_name} GROUP BY srcport ORDER BY n DESC"
-    },
-    {
-        "id": "SP-CD-FLOW",
-        "section": "Packet Level",
-        "sub_section": "Per Source Port Aggregations",
-        "description": "Distinct flows (5-tuples) per source port",
-        "category": "packet_level",
+    #     "sql": "SELECT srcport, COUNT(DISTINCT (dstip, dstport)) AS n FROM {table_name} GROUP BY srcport ORDER BY n DESC"
+    # },
+    # {
+    #     "id": "SP-CD-FLOW",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Source Port Aggregations",
+    #     "description": "Distinct flows (5-tuples) per source port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_srcport_stateless_connection2flow_topnkey", 
-            "flow_srcport_stateless_connection2flow_topnvalue",
-            "flow_srcport_stateless_connection2flow_distribution"
-        ],
+    #     "metric": [
+    #         "flow_srcport_stateless_connection2flow_topnkey", 
+    #         "flow_srcport_stateless_connection2flow_topnvalue",
+    #         "flow_srcport_stateless_connection2flow_distribution"
+    #     ],
 
-        "sql": """
-            SELECT srcport,
-                   COUNT(
-                       DISTINCT (srcip, dstip, srcport, dstport, proto)
-                   ) AS n
-            FROM {table_name}
-            GROUP BY srcport
-            ORDER BY n DESC
-        """
-    },
+    #     "sql": """
+    #         SELECT srcport,
+    #                COUNT(
+    #                    DISTINCT (srcip, dstip, srcport, dstport, proto)
+    #                ) AS n
+    #         FROM {table_name}
+    #         GROUP BY srcport
+    #         ORDER BY n DESC
+    #     """
+    # },
 
-    # Per Destination Port Aggregations
+    # # Per Destination Port Aggregations
 
-    {
-        "id": "DP-PKT",
-        "section": "Packet Level",
-        "sub_section": "Per Destination Port Aggregations",
-        "description": "Number of packets per destination port",
-        "category": "packet_level",
+    # {
+    #     "id": "DP-PKT",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Destination Port Aggregations",
+    #     "description": "Number of packets per destination port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_dstport_stateless_packet_topnkey", 
-            "flow_dstport_stateless_packet_topnvalue"
-        ],
+    #     "metric": [
+    #         "flow_dstport_stateless_packet_topnkey", 
+    #         "flow_dstport_stateless_packet_topnvalue"
+    #     ],
 
-        "sql": "SELECT dstport, COUNT(*) AS pkts FROM {table_name} GROUP BY dstport ORDER BY pkts DESC"
-    },
-    {
-        "id": "DP-BYTE",
-        "section": "Packet Level",
-        "sub_section": "Per Destination Port Aggregations",
-        "description": "Total bytes per destination port",
-        "category": "packet_level",
+    #     "sql": "SELECT dstport, COUNT(*) AS pkts FROM {table_name} GROUP BY dstport ORDER BY pkts DESC"
+    # },
+    # {
+    #     "id": "DP-BYTE",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Destination Port Aggregations",
+    #     "description": "Total bytes per destination port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_dstport_stateless_bytes_topnkey", 
-            "flow_dstport_stateless_bytes_topnvalue",
-            "flow_dstport_stateless_bytes_distribution"
-        ],
+    #     "metric": [
+    #         "flow_dstport_stateless_bytes_topnkey", 
+    #         "flow_dstport_stateless_bytes_topnvalue",
+    #         "flow_dstport_stateless_bytes_distribution"
+    #     ],
 
-        "sql": "SELECT dstport, SUM(pkt_len) AS bytes FROM {table_name} GROUP BY dstport ORDER BY bytes DESC"
-    },
-    {
-        "id": "DP-CD-DSTIP",
-        "section": "Packet Level",
-        "sub_section": "Per Source Port Aggregations",
-        "description": "Distinct Destination IPs per source port",
-        "category": "packet_level",
+    #     "sql": "SELECT dstport, SUM(pkt_len) AS bytes FROM {table_name} GROUP BY dstport ORDER BY bytes DESC"
+    # },
+    # {
+    #     "id": "DP-CD-DSTIP",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Source Port Aggregations",
+    #     "description": "Distinct Destination IPs per source port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_dstport_stateless_connection2dstip_topnkey", 
-            "flow_dstport_stateless_connection2dstip_topnvalue",
-            "flow_dstport_stateless_connection2dstip_distribution"
-        ],
+    #     "metric": [
+    #         "flow_dstport_stateless_connection2dstip_topnkey", 
+    #         "flow_dstport_stateless_connection2dstip_topnvalue",
+    #         "flow_dstport_stateless_connection2dstip_distribution"
+    #     ],
 
-        "sql": "SELECT dstport, COUNT(DISTINCT dstip) AS n FROM {table_name} GROUP BY dstport ORDER BY n DESC, dstport ASC"
-    },
-    {
-        "id": "DP-CD-SRCIP",
-        "section": "Packet Level",
-        "sub_section": "Per Destination Port Aggregations",
-        "description": "Distinct source IPs per destination port",
-        "category": "packet_level",
+    #     "sql": "SELECT dstport, COUNT(DISTINCT dstip) AS n FROM {table_name} GROUP BY dstport ORDER BY n DESC, dstport ASC"
+    # },
+    # {
+    #     "id": "DP-CD-SRCIP",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Destination Port Aggregations",
+    #     "description": "Distinct source IPs per destination port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_dstport_stateless_connection2srcip_topnkey", 
-            "flow_dstport_stateless_connection2srcip_topnvalue",
-            "flow_dstport_stateless_connection2srcip_distribution"
-        ],
+    #     "metric": [
+    #         "flow_dstport_stateless_connection2srcip_topnkey", 
+    #         "flow_dstport_stateless_connection2srcip_topnvalue",
+    #         "flow_dstport_stateless_connection2srcip_distribution"
+    #     ],
 
-        "sql": "SELECT dstport, COUNT(DISTINCT srcip) AS n FROM {table_name} GROUP BY dstport ORDER BY n DESC"
-    },
-    {
-        "id": "DP-CD-SRCPORT",
-        "section": "Packet Level",
-        "sub_section": "Per Destination Port Aggregations",
-        "description": "Distinct source ports per destination port",
-        "category": "packet_level",
+    #     "sql": "SELECT dstport, COUNT(DISTINCT srcip) AS n FROM {table_name} GROUP BY dstport ORDER BY n DESC"
+    # },
+    # {
+    #     "id": "DP-CD-SRCPORT",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Destination Port Aggregations",
+    #     "description": "Distinct source ports per destination port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_dstport_stateless_connection2srcport_topnkey", 
-            "flow_dstport_stateless_connection2srcport_topnvalue",
-            "flow_dstport_stateless_connection2srcport_distribution"
-        ],
+    #     "metric": [
+    #         "flow_dstport_stateless_connection2srcport_topnkey", 
+    #         "flow_dstport_stateless_connection2srcport_topnvalue",
+    #         "flow_dstport_stateless_connection2srcport_distribution"
+    #     ],
 
-        "sql": "SELECT dstport, COUNT(DISTINCT srcport) AS n FROM {table_name} GROUP BY dstport ORDER BY n DESC"
-    },
-    {
-        "id": "DP-CD-SRCIPPORT",
-        "section": "Packet Level",
-        "sub_section": "Per Destination Port Aggregations",
-        "description": "Distinct `(srcip, srcport)` pairs per destination port",
-        "category": "packet_level",
+    #     "sql": "SELECT dstport, COUNT(DISTINCT srcport) AS n FROM {table_name} GROUP BY dstport ORDER BY n DESC"
+    # },
+    # {
+    #     "id": "DP-CD-SRCIPPORT",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Destination Port Aggregations",
+    #     "description": "Distinct `(srcip, srcport)` pairs per destination port",
+    #     "category": "packet_level",
         
-        "metric": [
-            "flow_dstport_stateless_connection2srcipport_topnkey", 
-            "flow_dstport_stateless_connection2srcipport_topnvalue",
-            "flow_dstport_stateless_connection2srcipport_distribution"
-        ],
+    #     "metric": [
+    #         "flow_dstport_stateless_connection2srcipport_topnkey", 
+    #         "flow_dstport_stateless_connection2srcipport_topnvalue",
+    #         "flow_dstport_stateless_connection2srcipport_distribution"
+    #     ],
 
-        "sql": "SELECT dstport, COUNT(DISTINCT (srcip, srcport)) AS n FROM {table_name} GROUP BY dstport ORDER BY n DESC"
-    },
-    {
-        "id": "DP-CD-FLOW",
-        "section": "Packet Level",
-        "sub_section": "Per Destination Port Aggregations",
-        "description": "Distinct flows per destination port",
-        "category": "packet_level",
+    #     "sql": "SELECT dstport, COUNT(DISTINCT (srcip, srcport)) AS n FROM {table_name} GROUP BY dstport ORDER BY n DESC"
+    # },
+    # {
+    #     "id": "DP-CD-FLOW",
+    #     "section": "Packet Level",
+    #     "sub_section": "Per Destination Port Aggregations",
+    #     "description": "Distinct flows per destination port",
+    #     "category": "packet_level",
         
-         "metric": [
-            "flow_dstport_stateless_connection2flow_topnkey", 
-            "flow_dstport_stateless_connection2flow_topnvalue",
-            "flow_dstport_stateless_connection2flow_distribution"
-        ],
+    #      "metric": [
+    #         "flow_dstport_stateless_connection2flow_topnkey", 
+    #         "flow_dstport_stateless_connection2flow_topnvalue",
+    #         "flow_dstport_stateless_connection2flow_distribution"
+    #     ],
 
-        "sql": """
-            SELECT dstport,
-                   COUNT(
-                       DISTINCT (srcip, dstip, srcport, dstport, proto)
-                   ) AS n
-            FROM {table_name}
-            GROUP BY dstport
-            ORDER BY n DESC
-        """
-    }
+    #     "sql": """
+    #         SELECT dstport,
+    #                COUNT(
+    #                    DISTINCT (srcip, dstip, srcport, dstport, proto)
+    #                ) AS n
+    #         FROM {table_name}
+    #         GROUP BY dstport
+    #         ORDER BY n DESC
+    #     """
+    # }
 ]

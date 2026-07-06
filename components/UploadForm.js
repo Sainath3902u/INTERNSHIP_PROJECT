@@ -12,7 +12,7 @@ export default function UploadForm() {
 
   const handleFormSubmit = async (e) => {
   e.preventDefault();
-  if (!realFile || !syntheticFile) return;
+  // if (!realFile || !syntheticFile) return;
 
   setIsSimulating(true);
 
@@ -20,15 +20,15 @@ export default function UploadForm() {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
     // 1. Tell the backend to prepare the datasets inside DuckDB
-    const uploadResponse = await fetch(`${backendUrl}/load-datasets`, {
-      method: 'POST',
-    });
+    // const uploadResponse = await fetch(`${backendUrl}/load-datasets`, {
+    //   method: 'POST',
+    // });
 
-    if (!uploadResponse.ok) {
-      throw new Error('Backend failed to load the datasets into DuckDB.');
-    }
-    const uploadData = await uploadResponse.json();
-    console.log('Ingestion success:', uploadData);
+    // if (!uploadResponse.ok) {
+    //   throw new Error('Backend failed to load the datasets into DuckDB.');
+    // }
+    // const uploadData = await uploadResponse.json();
+    // console.log('Ingestion success:', uploadData);
 
     // 2. Trigger the statistical calculations
     const evalResponse = await fetch(`${backendUrl}/evaluate-seq`);
@@ -90,7 +90,7 @@ export default function UploadForm() {
 
       <button
         type="submit"
-        disabled={!realFile || !syntheticFile || isSimulating}
+        // disabled={!realFile || !syntheticFile || isSimulating}
         className="w-full py-3 px-4 rounded-xl text-white font-medium bg-indigo-600 hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md shadow-indigo-100 dark:shadow-none"
       >
         {isSimulating ? (

@@ -22,14 +22,11 @@ export default function CategoryPage() {
     const savedData = localStorage.getItem('syntheticEvalData');
     if (savedData) {
       const parsed = JSON.parse(savedData);
-      console.log("WHOLE BACKEND PAYLOAD:", parsed);
-
-
+      
       const targetConfig = reportKeyMap[categoryKey];
 
       if (targetConfig) {
         const report = parsed[targetConfig.key];
-        console.log("SELECTED REPORT SEGMENT:", report);
 
         if (report) {
           // Structure it nicely so your existing template styles read it smoothly

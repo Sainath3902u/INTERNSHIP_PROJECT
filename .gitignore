@@ -9,6 +9,8 @@ benchmark.db.wal
 # Ignore any raw dataset CSV files
 *.csv
 
+# Ignore PY Env
+venv
 
 # dependencies
 /node_modules
@@ -49,3 +51,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Py Cache
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python compiled files
+*.pyo
+*.pyd

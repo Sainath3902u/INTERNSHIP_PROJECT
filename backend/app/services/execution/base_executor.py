@@ -1,5 +1,4 @@
 from app.services.evaluation.metric_runner import MetricRunner
-
 import time
 
 class BaseRunner:
@@ -8,6 +7,7 @@ class BaseRunner:
 
     @classmethod
     def run_query(cls, db, query):
+
         start_time = time.perf_counter()
 
         real_sql = query["sql"].format(table_name="real_packets")
@@ -18,27 +18,33 @@ class BaseRunner:
 
         query_time = time.perf_counter() - start_time
 
-        results = []
+        metrics = []
 
         for metric_name in query["metric"]:
 
-            score = MetricRunner.compute(
+            result = MetricRunner.compute(
                 metric_name,
                 real_result,
                 synthetic_result
             )
 
-            results.append({
-                "query_id": query["id"],
-                # "query_section": query["section"],
-                # "query_description": query["description"],
-                # "sql": query["sql"],
+            result["score"] = round(result["score"], 4)
+
+            metrics.append({
                 "metric": metric_name,
-                "score": round(score, 4),
-                "query_exec_time_sec": round(query_time, 4),
+                **result
             })
 
-        return results
+        return {
+            "query_id": query["id"],
+            "query_section": query["section"],
+            "query_description": query["description"],
+            "sql": query["sql"],
+
+            "metrics": metrics,
+
+            "query_exec_time_sec": round(query_time, 4),
+        }
 
     @classmethod
     def run_all(cls, db):
@@ -46,6 +52,6 @@ class BaseRunner:
         results = []
 
         for query in cls.QUERIES:
-            results.extend(cls.run_query(db, query))
+            results.append(cls.run_query(db, query))
 
         return results

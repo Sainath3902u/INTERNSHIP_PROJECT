@@ -34,13 +34,20 @@ class ReportGenerator:
     @classmethod
     def generate(cls, results):
 
-        metrics = [
-            {
-                **result,
-                "score": round(float(result["score"]), 4)
-            }
-            for result in results
-        ]
+        metrics = []
+
+        for result in results:
+            for metric in result["metrics"]:
+
+                metrics.append({
+                    "query_id": result["query_id"],
+                    "query_section": result["query_section"],
+                    "query_description": result["query_description"],
+
+                    **metric,
+
+                    "score": round(float(metric["score"]), 4)
+                })
 
         if not metrics:
             return {
