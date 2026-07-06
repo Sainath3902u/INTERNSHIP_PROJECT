@@ -29,10 +29,25 @@ export default function CategoryPage() {
         const report = parsed[targetConfig.key];
 
         if (report) {
-          // Structure it nicely so your existing template styles read it smoothly
+          const queries = Array.isArray(report)
+            ? report
+            : (report.queries || []);
+
+          const flattenedMetrics = queries.flatMap(query =>
+            (query.metrics || []).map((metric, index) => ({
+              ...metric,
+              query_id: query.query_id,
+              query_description: query.query_description,
+              query_section: query.query_section,
+              sql: query.sql,
+              query_exec_time_sec: query.query_exec_time_sec,
+              unique_id: `${query.query_id}-${metric.metric}-${index}`
+            }))
+          );
+
           setLiveCategoryData({
             name: targetConfig.label,
-            queries: Array.isArray(report) ? report : (report.queries || [])// Feeds the array directly to your table view
+            queries: flattenedMetrics
           });
         }
       }

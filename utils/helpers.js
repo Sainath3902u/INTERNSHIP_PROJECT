@@ -23,10 +23,13 @@ export function getScoreColor(score) {
   }
 }
 
-export function formatScore(score) {
-  if (typeof score !== "number") return "0.00";
-  return score.toFixed(2);
-}
+export const formatScore = (score) => {
+  const num = Number(score);
+
+  if (Number.isNaN(num)) return '0.0000';
+
+  return num.toFixed(4);
+};
 
 export function convertToConfidence(score) {
   if (typeof score !== "number") return "0%";

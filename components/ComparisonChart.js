@@ -4,6 +4,7 @@ import RankShareChart from './charts/RankShareChart';
 import BarComparisonChart from './charts/BarComparisonChart';
 import CategoryDistributionChart from './charts/GroupedBarChart';
 import OverlayLineChart from './charts/OverlayLineChart';
+import TopNKeyOverlapChart from './charts/OverlapTable';
 
 export default function ComparisonChart({ chartData }) {
   if (!chartData) return null;
@@ -20,6 +21,9 @@ export default function ComparisonChart({ chartData }) {
 
     case 'overlay_line':
       return <OverlayLineChart chartData={chartData} />
+
+    case 'topnkey':
+      return <TopNKeyOverlapChart chartData={chartData} />
 
     default:
       return (

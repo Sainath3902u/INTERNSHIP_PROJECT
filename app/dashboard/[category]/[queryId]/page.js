@@ -29,15 +29,26 @@ export default function QueryDetailPage() {
 
     const categoryData = data[categoryMap[category]] || [];
 
-    setSelectedCategory({
-      name: category.replace(/_/g, ' '),
-      queries: categoryData,
-    });
-
-    const metric = categoryData.find(
-      q => q.query_id === queryId
+    const flattenedMetrics = categoryData.flatMap(query =>
+      (query.metrics || []).map((metric, index) => ({
+        ...metric,
+        query_id: query.query_id,
+        query_description: query.query_description,
+        query_section: query.query_section,
+        sql: query.sql,
+        unique_id: `${query.query_id}-${metric.metric}-${index}`
+      }))
     );
 
+    setSelectedCategory({
+      name: category.replace(/_/g, ' '),
+      queries: flattenedMetrics,
+    });
+
+    const metric = flattenedMetrics.find(
+      item => item.unique_id === queryId
+    );
+    
     setQueryMetric(metric);
   }, [category, queryId]);
 
@@ -58,17 +69,17 @@ export default function QueryDetailPage() {
     );
   }
 
-  const metricData = queryMetric.metrics?.[0] ?? {};
-
-  const metricName = metricData.metric
-    ? metricData.metric
+  const metricData = queryMetric.metric?.[0] ?? {};
+  
+  const metricName = queryMetric.metric
+    ? queryMetric.metric
         .replace(/_+/g, ' ')
         .trim()
         .replace(/\b\w/g, c => c.toUpperCase())
     : 'Unknown Metric';
-
-  const score = metricData.score ?? 0;
-  const visualization = metricData.visualization ?? null;
+  
+  const score = queryMetric.score ?? 0;
+  const visualization = queryMetric.visualization ?? null;
 
   const colorProfile = getScoreColor(score);
 

@@ -26,6 +26,7 @@ export default function CategoryDistributionChart({ chartData }) {
     real: chartData.real[idx],
     synthetic: chartData.synthetic[idx],
   }));
+  const isTopN = chartData?.flag === 'topn';
 
   return (
     <div className="w-full h-[500px] bg-white p-4 rounded-xl border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
@@ -51,7 +52,11 @@ export default function CategoryDistributionChart({ chartData }) {
             tick={{ fill: '#94A3B8', fontSize: 12 }}
             axisLine={{ stroke: '#475569' }}
             tickLine={{ stroke: '#475569' }}
-            tickFormatter={(v) => `${(v * 100).toFixed(1)}%`}
+            tickFormatter={(v) =>
+              isTopN
+                ? Number(v).toLocaleString()
+                : `${(v * 100).toFixed(1)}%`
+            }
           />
 
           <YAxis
@@ -65,10 +70,12 @@ export default function CategoryDistributionChart({ chartData }) {
 
           <Tooltip
             formatter={(value, name) => [
-              `${(value * 100).toFixed(2)}%`,
+              isTopN
+                ? Number(value).toLocaleString()
+                : `${(value * 100).toFixed(2)}%`,
               name,
             ]}
-            labelFormatter={(label) => `Port ${label}`}
+            labelFormatter={(label) => String(label)}
             contentStyle={{
               backgroundColor: '#0F172A',
               border: '1px solid #334155',
@@ -80,14 +87,14 @@ export default function CategoryDistributionChart({ chartData }) {
 
           <Bar
             dataKey="real"
-            name="Real Distribution"
+            name={isTopN ? "Real" : "Real Distribution"}
             fill="#FF6B6B"
             radius={[0, 4, 4, 0]}
           />
 
           <Bar
             dataKey="synthetic"
-            name="Synthetic Distribution"
+            name={isTopN ? "Synthetic" : "Synthetic Distribution"}
             fill="#00E5FF"
             radius={[0, 4, 4, 0]}
           />
