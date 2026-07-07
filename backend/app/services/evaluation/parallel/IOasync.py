@@ -9,6 +9,10 @@ import time
 import math
 
 
+def rms(*values):
+    return math.sqrt(sum(x ** 2 for x in values) / len(values))
+
+
 def create_db():
     db = DuckDBManager()
     db.connect()
@@ -17,33 +21,39 @@ def create_db():
 
 def run_packet():
     start = time.time()
-
     db = create_db()
+
     try:
         results = PacketRunner.run_all(db)
-        return results, time.time() - start
+        report = ReportGenerator.generate(results)
+        elapsed = time.time() - start
+        return results, report, elapsed
     finally:
         db.close()
 
 
 def run_stateless():
     start = time.time()
-
     db = create_db()
+
     try:
         results = FlowStatelessRunner.run_all(db)
-        return results, time.time() - start
+        report = ReportGenerator.generate(results)
+        elapsed = time.time() - start
+        return results, report, elapsed
     finally:
         db.close()
 
 
 def run_stateful():
     start = time.time()
-
     db = create_db()
+
     try:
         results = FlowStatefulRunner.run_all(db)
-        return results, time.time() - start
+        report = ReportGenerator.generate(results)
+        elapsed = time.time() - start
+        return results, report, elapsed
     finally:
         db.close()
 
@@ -52,47 +62,45 @@ class EvaluationController:
 
     @staticmethod
     async def run_all(db=None):
-
         overall_start = time.time()
 
         (
-            (packet_results, packet_time),
-            (flow_stateless_results, stateless_time),
-            (flow_stateful_results, stateful_time),
+            (packet_results, packet_report, packet_time),
+            (flow_stateless_results, stateless_report, less_time),
+            (flow_stateful_results, statefull_report, full_time),
         ) = await asyncio.gather(
             asyncio.to_thread(run_packet),
             asyncio.to_thread(run_stateless),
             asyncio.to_thread(run_stateful),
         )
 
-        packet_report = ReportGenerator.generate(packet_results)
-        stateless_report = ReportGenerator.generate(flow_stateless_results)
-        statefull_report = ReportGenerator.generate(flow_stateful_results)
-
-        overallRMS = math.sqrt(
-            (
-                packet_report["overall"]["avg"] ** 2 +
-                stateless_report["overall"]["avg"] ** 2 +
-                statefull_report["overall"]["avg"] ** 2
-            ) / 3
+        overallRMS = rms(
+            packet_report["overall"]["avg"],
+            stateless_report["overall"]["avg"],
+            statefull_report["overall"]["avg"],
         )
 
-        total_time = time.time() - overall_start
+        overallTime = time.time() - overall_start
 
-        print(f"Packet: {packet_time:.2f}s")
-        print(f"Stateless: {stateless_time:.2f}s")
-        print(f"Stateful: {stateful_time:.2f}s")
-        print(f"Total: {total_time:.2f}s")
+        print(f"Packet Time: {packet_time:.2f} seconds")
+        print(f"Flow Stateless Time: {less_time:.2f} seconds")
+        print(f"Flow Stateful Time: {full_time:.2f} seconds")
+        print(f"Overall Time: {overallTime:.2f} seconds")
 
         return {
+            "packet": packet_results,
+            "packet_report": packet_report,
+
+            "flow_stateless": flow_stateless_results,
+            "stateless_report": stateless_report,
+
+            "flow_stateful": flow_stateful_results,
+            "statefull_report": statefull_report,
+
             "overallRMS": overallRMS,
+
             "packet_time": packet_time,
-            "stateless_time": stateless_time,
-            "stateful_time": stateful_time,
-            "total_time": total_time,
-            "total_queries": (
-                len(packet_results)
-                + len(flow_stateless_results)
-                + len(flow_stateful_results)
-            )
+            "less_time": less_time,
+            "full_time": full_time,
+            "overallTime": overallTime,
         }

@@ -10,7 +10,7 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
 
       "metric": [
-        # "flow_srcip_stateful_avgpacketinterval_topnvalue",
+        "flow_srcip_stateful_avgpacketinterval_topnvalue",
         "flow_srcip_stateful_avgpacketinterval_distribution"
       ],
 
@@ -32,8 +32,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_srcip_stateful_flowduration_topnvalue",
-        # "flow_srcip_stateful_flowduration_distribution"
+        "flow_srcip_stateful_flowduration_topnvalue",
+        "flow_srcip_stateful_flowduration_distribution"
       ],
 
       "sql": """
@@ -51,8 +51,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_srcip_stateful_byterate_topnvalue",
-        # "flow_srcip_stateful_byterate_distribution"
+        "flow_srcip_stateful_byterate_topnvalue",
+        "flow_srcip_stateful_byterate_distribution"
       ],
 
       "sql": """
@@ -76,8 +76,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_srcip_stateful_std_interarrival_topnvalue",
-        # "flow_srcip_stateful_std_interarrival_distribution"
+        "flow_srcip_stateful_std_interarrival_topnvalue",
+        "flow_srcip_stateful_std_interarrival_distribution"
       ],
 
       "sql": """
@@ -98,8 +98,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_srcip_stateful_cv_interarrival_topnvalue",
-        # "flow_srcip_stateful_cv_interarrival_distribution"
+        "flow_srcip_stateful_cv_interarrival_topnvalue",
+        "flow_srcip_stateful_cv_interarrival_distribution"
       ],
 
       "sql": """
@@ -124,8 +124,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_dstip_stateful_avgpacketinterval_topnvalue",
-        # "flow_dstip_stateful_avgpacketinterval_distribution"
+        "flow_dstip_stateful_avgpacketinterval_topnvalue",
+        "flow_dstip_stateful_avgpacketinterval_distribution"
       ],
 
       "sql": """
@@ -146,8 +146,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_dstip_stateful_flowduration_topnvalue",
-        # "flow_dstip_stateful_flowduration_distribution"
+        "flow_dstip_stateful_flowduration_topnvalue",
+        "flow_dstip_stateful_flowduration_distribution"
       ],
 
       "sql": """
@@ -165,8 +165,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_dstip_stateful_byterate_topnvalue",
-        # "flow_dstip_stateful_byterate_distribution"
+        "flow_dstip_stateful_byterate_topnvalue",
+        "flow_dstip_stateful_byterate_distribution"
       ],
 
       "sql": """
@@ -190,8 +190,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_dstip_stateful_std_interarrival_topnvalue",
-        # "flow_dstip_stateful_std_interarrival_distribution"
+        "flow_dstip_stateful_std_interarrival_topnvalue",
+        "flow_dstip_stateful_std_interarrival_distribution"
       ],
 
       "sql": """
@@ -212,8 +212,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_dstip_stateful_cv_interarrival_topnvalue",
-        # "flow_dstip_stateful_cv_interarrival_distribution"
+        "flow_dstip_stateful_cv_interarrival_topnvalue",
+        "flow_dstip_stateful_cv_interarrival_distribution"
       ],
 
       "sql": """
@@ -238,8 +238,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_ippair_stateful_avgpacketinterval_topnvalue",
-        # "flow_ippair_stateful_avgpacketinterval_distribution"
+        "flow_ippair_stateful_avgpacketinterval_topnvalue",
+        "flow_ippair_stateful_avgpacketinterval_distribution"
       ],
 
       "sql": """
@@ -261,8 +261,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_ippair_stateful_flowduration_topnvalue",
-        # "flow_ippair_stateful_flowduration_distribution"
+        "flow_ippair_stateful_flowduration_topnvalue",
+        "flow_ippair_stateful_flowduration_distribution"
       ],
 
       "sql": """
@@ -280,8 +280,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_ippair_stateful_byterate_topnvalue",
-        # "flow_ippair_stateful_byterate_distribution"
+        "flow_ippair_stateful_byterate_topnvalue",
+        "flow_ippair_stateful_byterate_distribution"
       ],
 
       "sql": """
@@ -306,8 +306,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_ippair_stateful_std_interarrival_topnvalue",
-        # "flow_ippair_stateful_std_interarrival_distribution"
+        "flow_ippair_stateful_std_interarrival_topnvalue",
+        "flow_ippair_stateful_std_interarrival_distribution"
       ],
 
       "sql": """
@@ -329,8 +329,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_ippair_stateful_cv_interarrival_topnvalue",
-        # "flow_ippair_stateful_cv_interarrival_distribution"
+        "flow_ippair_stateful_cv_interarrival_topnvalue",
+        "flow_ippair_stateful_cv_interarrival_distribution"
       ],
 
       "sql": """
@@ -356,8 +356,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_fivetuple_stateful_avgpacketinterval_topnvalue",
-        # "flow_fivetuple_stateful_avgpacketinterval_distribution"
+        "flow_fivetuple_stateful_avgpacketinterval_topnvalue",
+        "flow_fivetuple_stateful_avgpacketinterval_distribution"
       ],
 
       "sql": """
@@ -376,8 +376,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_fivetuple_stateful_flowduration_topnvalue",
-        # "flow_fivetuple_stateful_flowduration_distribution"
+        "flow_fivetuple_stateful_flowduration_topnvalue",
+        "flow_fivetuple_stateful_flowduration_distribution"
       ],
 
       "sql": """
@@ -387,53 +387,53 @@ FLOW_STATEFUL = [
       ORDER BY duration DESC
       """
   },
-  # {
-  #     "id": "FT-BRATE",
-  #     "section": "Flow Level Stateful",
-  #     "sub_section": "Per 5-Tuple Flow",
-  #     "description": "Byte rate per 5-tuple flow",
-  #     "category": "flow_level_stateful",
+  {
+      "id": "FT-BRATE",
+      "section": "Flow Level Stateful",
+      "sub_section": "Per 5-Tuple Flow",
+      "description": "Byte rate per 5-tuple flow",
+      "category": "flow_level_stateful",
       
-  #     "metric": [
-  #       "flow_fivetuple_stateful_byterate_distribution"
-  #     ],
+      "metric": [
+        "flow_fivetuple_stateful_byterate_distribution"
+      ],
 
-  #     "sql": """
-  #     SELECT srcip, dstip, srcport, dstport, proto,
-  #           SUM(pkt_len) /
-  #           CASE
-  #               WHEN MAX(time) - MIN(time) = 0 THEN 1
-  #               ELSE MAX(time) - MIN(time)
-  #           END AS byte_rate
-  #     FROM {table_name}
-  #     GROUP BY srcip, dstip, srcport, dstport, proto
-  #     HAVING COUNT(*) > 1
-  #     ORDER BY byte_rate DESC
-  #     """
-  # },
-  # {
-  #     "id": "FT-BRATE",
-  #     "section": "Flow Level Stateful",
-  #     "sub_section": "Per 5-Tuple Flow",
-  #     "description": "Byte rate per 5-tuple flow",
-  #     "category": "flow_level_stateful",
+      "sql": """
+      SELECT srcip, dstip, srcport, dstport, proto,
+            SUM(pkt_len) /
+            CASE
+                WHEN MAX(time) - MIN(time) = 0 THEN 1
+                ELSE MAX(time) - MIN(time)
+            END AS byte_rate
+      FROM {table_name}
+      GROUP BY srcip, dstip, srcport, dstport, proto
+      HAVING COUNT(*) > 1
+      ORDER BY byte_rate DESC
+      """
+  },
+  {
+      "id": "FT-BRATE",
+      "section": "Flow Level Stateful",
+      "sub_section": "Per 5-Tuple Flow",
+      "description": "Byte rate per 5-tuple flow",
+      "category": "flow_level_stateful",
       
-  #     "metric": [
-  #       "flow_fivetuple_stateful_byterate_topnvalue",
-  #     ],
+      "metric": [
+        "flow_fivetuple_stateful_byterate_topnvalue",
+      ],
 
-  #     "sql": """
-  #     SELECT srcip, dstip, srcport, dstport, proto,
-  #           SUM(pkt_len) /
-  #           CASE
-  #               WHEN MAX(time) - MIN(time) = 0 THEN 1
-  #               ELSE MAX(time) - MIN(time)
-  #           END AS byte_rate
-  #     FROM {table_name}
-  #     GROUP BY srcip, dstip, srcport, dstport, proto
-  #     ORDER BY byte_rate DESC
-  #     """
-  # },
+      "sql": """
+      SELECT srcip, dstip, srcport, dstport, proto,
+            SUM(pkt_len) /
+            CASE
+                WHEN MAX(time) - MIN(time) = 0 THEN 1
+                ELSE MAX(time) - MIN(time)
+            END AS byte_rate
+      FROM {table_name}
+      GROUP BY srcip, dstip, srcport, dstport, proto
+      ORDER BY byte_rate DESC
+      """
+  },
   {
       "id": "FT-SINT",
       "section": "Flow Level Stateful",
@@ -442,8 +442,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
       
       "metric": [
-        # "flow_fivetuple_stateful_std_interarrival_topnvalue",
-        # "flow_fivetuple_stateful_std_interarrival_distribution"
+        "flow_fivetuple_stateful_std_interarrival_topnvalue",
+        "flow_fivetuple_stateful_std_interarrival_distribution"
       ],
 
       "sql": """
@@ -462,8 +462,8 @@ FLOW_STATEFUL = [
       "category": "flow_level_stateful",
 
       "metric": [
-        # "flow_fivetuple_stateful_cv_interarrival_topnvalue",
-        # "flow_fivetuple_stateful_cv_interarrival_distribution"
+        "flow_fivetuple_stateful_cv_interarrival_topnvalue",
+        "flow_fivetuple_stateful_cv_interarrival_distribution"
       ],
 
       "sql": """

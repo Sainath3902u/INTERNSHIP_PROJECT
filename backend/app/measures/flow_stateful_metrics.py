@@ -114,26 +114,6 @@ def flow_srcip_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of average packet inter-arrival times per source IP.
-
-    The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, AVG(gap) AS avg_interval
-        FROM gaps
-        GROUP BY srcip
-        HAVING COUNT(*) > 10
-        ORDER BY avg_interval DESC
-
-    Each DataFrame contains one row per source IP with
-    the average packet inter-arrival time in the
-    'avg_interval' column.
     """
 
     real_intervals = real_df_1["avg_interval"].to_numpy()
@@ -197,17 +177,6 @@ def flow_srcip_stateful_flowduration_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the flow-duration
     distributions of source IPs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip,
-               MAX(time) - MIN(time) AS duration
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY duration DESC
-
-    Each DataFrame contains one row per source IP with
-    the flow duration in the 'duration' column.
     """
 
     real_duration = real_df_1["duration"].to_numpy()
@@ -271,22 +240,6 @@ def flow_srcip_stateful_byterate_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the byte-rate
     distributions of source IPs.
-
-    The inputs are SQL aggregation results generated from:
-
-        SELECT srcip,
-               SUM(pkt_len) /
-               CASE
-                   WHEN MAX(time) - MIN(time) = 0 THEN 1
-                   ELSE MAX(time) - MIN(time)
-               END AS byte_rate
-        FROM <table_name>
-        GROUP BY srcip
-        HAVING COUNT(*) > 1
-        ORDER BY byte_rate DESC
-
-    Each DataFrame contains one row per source IP with
-    the byte rate in the 'byte_rate' column.
     """
 
     real_rates = real_df_1["byte_rate"].to_numpy()
@@ -349,10 +302,6 @@ def flow_srcip_stateful_std_interarrival_distribution(real_df_1, gen_df_2, n=10)
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of packet inter-arrival-time standard deviations for source IPs.
-
-    SQL input columns:
-        srcip,
-        std_iat
     """
 
     real_std = real_df_1["std_iat"].to_numpy()
@@ -412,10 +361,6 @@ def flow_srcip_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between distributions
     of coefficients of variation (CV) of packet inter-arrival times.
-
-    SQL input columns:
-        srcip,
-        cv_iat
     """
 
     real_vals = real_df_1["cv_iat"].to_numpy()
@@ -481,10 +426,6 @@ def flow_dstip_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of average packet inter-arrival times for destination IPs.
-
-    SQL input columns:
-        dstip,
-        avg_interval
     """
 
     real_intervals = real_df_1["avg_interval"].to_numpy()
@@ -550,24 +491,6 @@ def flow_dstip_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
     of flow durations for destination IPs in the real and generated datasets.
     Destination IP addresses themselves are ignored; only the duration values
     and their resulting distributions are compared.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, MAX(time) - MIN(time) AS duration
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY duration DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the corresponding flow duration in the 'duration' column.
-
-    Args:
-        real_df_1 (pd.DataFrame): SQL aggregation result for the real dataset.
-        gen_df_2 (pd.DataFrame): SQL aggregation result for the generated dataset.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_durations = real_df_1["duration"].to_numpy()
@@ -585,9 +508,14 @@ def flow_dstip_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
         else np.zeros_like(gen_durations)
     )
 
-    # Sort distributions (dstip-agnostic comparison)
     real_sorted = np.sort(real_dist)[::-1]
     gen_sorted = np.sort(gen_dist)[::-1]
+
+    # Sort distributions (dstip-agnostic comparison)
+    max_len = max(len(real_sorted), len(gen_sorted))
+
+    real_sorted = np.pad(real_sorted, (0, max_len - len(real_sorted)))
+    gen_sorted = np.pad(gen_sorted, (0, max_len - len(gen_sorted)))
 
     score = jensenshannon_wrapper(real_sorted, gen_sorted, base=2)
 
@@ -632,30 +560,6 @@ def flow_dstip_stateful_byterate_distribution(real_df_1, gen_df_2):
     of byte rates for destination IPs in the real and generated datasets.
     Destination IP addresses themselves are ignored; only the byte-rate values
     and their resulting distributions are compared.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip,
-               SUM(pkt_len) /
-               CASE
-                   WHEN MAX(time) - MIN(time) = 0 THEN 1
-                   ELSE MAX(time) - MIN(time)
-               END AS byte_rate
-        FROM <table_name>
-        GROUP BY dstip
-        HAVING COUNT(*) > 1
-        ORDER BY byte_rate DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the byte rate stored in the 'byte_rate' column.
-
-    Args:
-        real_df_1 (pd.DataFrame): SQL aggregation result for the real dataset.
-        gen_df_2 (pd.DataFrame): SQL aggregation result for the generated dataset.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_rates = real_df_1["byte_rate"].to_numpy()
@@ -675,6 +579,11 @@ def flow_dstip_stateful_byterate_distribution(real_df_1, gen_df_2):
 
     real_sorted = np.sort(real_dist)[::-1]
     gen_sorted = np.sort(gen_dist)[::-1]
+
+    max_len = max(len(real_sorted), len(gen_sorted))
+
+    real_sorted = np.pad(real_sorted, (0, max_len - len(real_sorted)))
+    gen_sorted = np.pad(gen_sorted, (0, max_len - len(gen_sorted)))
 
     score = jensenshannon_wrapper(real_sorted, gen_sorted, base=2)
 
@@ -717,30 +626,6 @@ def flow_dstip_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of standard deviations of packet inter-arrival times for destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT dstip, STDDEV_POP(gap) AS std_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY dstip
-        ORDER BY std_iat DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the standard deviation of packet inter-arrival times in the
-        'std_iat' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_std = real_df_1["std_iat"].to_numpy()
@@ -802,32 +687,6 @@ def flow_dstip_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of coefficients of variation (CV) of packet inter-arrival times for
     destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT dstip,
-               STDDEV_POP(gap) / AVG(gap) AS cv_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY dstip
-        HAVING AVG(gap) > 0
-        ORDER BY cv_iat DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the coefficient of variation of packet inter-arrival times in the
-        'cv_iat' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_cv = real_df_1["cv_iat"].to_numpy()
@@ -893,30 +752,6 @@ def flow_ippair_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2, n=1
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of average packet inter-arrival times for source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip,
-                   dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, AVG(gap) AS avg_interval
-        FROM gaps
-        GROUP BY srcip, dstip
-        HAVING COUNT(*) > 10
-        ORDER BY avg_interval DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the average packet inter-arrival time in the 'avg_interval' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_vals = real_df_1["avg_interval"].to_numpy()
@@ -980,22 +815,6 @@ def flow_ippair_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of flow durations for source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip,
-               dstip,
-               MAX(time) - MIN(time) AS duration
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY duration DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the flow duration in the 'duration' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_vals = real_df_1["duration"].to_numpy()
@@ -1059,27 +878,6 @@ def flow_ippair_stateful_byterate_distribution(real_df_1, gen_df_2, n=10):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of byte rates for source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip,
-               dstip,
-               SUM(pkt_len) /
-               CASE
-                   WHEN MAX(time) - MIN(time) = 0 THEN 1
-                   ELSE MAX(time) - MIN(time)
-               END AS byte_rate
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        HAVING COUNT(*) > 1
-        ORDER BY byte_rate DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the byte rate in the 'byte_rate' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_vals = real_df_1["byte_rate"].to_numpy()
@@ -1145,31 +943,6 @@ def flow_ippair_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of standard deviations of packet inter-arrival times for
     source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip,
-                   dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, STDDEV_POP(gap) AS std_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY srcip, dstip
-        ORDER BY std_iat DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the standard deviation of packet inter-arrival times in the
-        'std_iat' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_std = real_df_1["std_iat"].to_numpy()
@@ -1232,34 +1005,6 @@ def flow_ippair_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of coefficients of variation (CV) of packet inter-arrival times for
     source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip,
-                   dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip,
-               dstip,
-               STDDEV_POP(gap) / AVG(gap) AS cv_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY srcip, dstip
-        HAVING AVG(gap) > 0
-        ORDER BY cv_iat DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the coefficient of variation of packet inter-arrival times in
-        the 'cv_iat' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_cv = real_df_1["cv_iat"].to_numpy()
@@ -1325,30 +1070,6 @@ def flow_fivetuple_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2, 
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of average packet inter-arrival times for 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip, dstip, srcport, dstport, proto,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip, srcport, dstport, proto
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, srcport, dstport, proto,
-               AVG(gap) AS avg_interval
-        FROM gaps
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        HAVING COUNT(*) > 10
-        ORDER BY avg_interval DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the average packet inter-arrival time in the 'avg_interval' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_vals = real_df_1["avg_interval"].to_numpy()
@@ -1412,21 +1133,6 @@ def flow_fivetuple_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10)
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of flow durations for 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, srcport, dstport, proto,
-               MAX(time) - MIN(time) AS duration
-        FROM <table_name>
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        ORDER BY duration DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the flow duration in the 'duration' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_vals = real_df_1["duration"].to_numpy()
@@ -1490,26 +1196,6 @@ def flow_fivetuple_stateful_byterate_distribution(real_df_1, gen_df_2, n=10):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of byte rates for 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, srcport, dstport, proto,
-               SUM(pkt_len) /
-               CASE
-                   WHEN MAX(time) - MIN(time) = 0 THEN 1
-                   ELSE MAX(time) - MIN(time)
-               END AS byte_rate
-        FROM <table_name>
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        HAVING COUNT(*) > 1
-        ORDER BY byte_rate DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the byte rate in the 'byte_rate' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_vals = real_df_1["byte_rate"].to_numpy()
@@ -1573,31 +1259,6 @@ def flow_fivetuple_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
     """
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of standard deviations of packet inter-arrival times for 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip, dstip, srcport, dstport, proto,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip, srcport, dstport, proto
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, srcport, dstport, proto,
-               STDDEV_POP(gap) AS std_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        ORDER BY std_iat DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the standard deviation of packet inter-arrival times in the
-        'std_iat' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_std = real_df_1["std_iat"].to_numpy()
@@ -1659,32 +1320,6 @@ def flow_fivetuple_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
     Computes the Jensen-Shannon Divergence (JSD) between the distributions
     of coefficients of variation (CV) of packet inter-arrival times for
     5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip, dstip, srcport, dstport, proto,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip, srcport, dstport, proto
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, srcport, dstport, proto,
-               STDDEV_POP(gap) / AVG(gap) AS cv_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        HAVING AVG(gap) > 0
-        ORDER BY cv_iat DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the coefficient of variation of packet inter-arrival times in the
-        'cv_iat' column.
-
-    Returns:
-        float: Jensen-Shannon Divergence (JSD) in [0, 1].
     """
 
     real_cv = real_df_1["cv_iat"].to_numpy()

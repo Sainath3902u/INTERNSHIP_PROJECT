@@ -68,7 +68,7 @@ export default function RankShareChart({ chartData }) {
             tickLine={{ stroke: '#475569' }}
             tickFormatter={(v) => `${(v * 100).toFixed(1)}%`}
             label={{
-              value: 'Packet Share',
+              value: 'Normalized Share (%)',
               angle: -90,
               position: 'insideLeft',
               fill: '#94A3B8',
