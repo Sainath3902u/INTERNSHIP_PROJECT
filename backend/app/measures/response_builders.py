@@ -159,7 +159,7 @@ def build_topnkey(score, real_keys, synthetic_keys):
         }
     }
 
-def build_topn(score, labels, real, synthetic):
+def build_topn(score, labels, real, synthetic, unit =""):
 
     return {
         "score": round(float(score), 4),
@@ -167,6 +167,7 @@ def build_topn(score, labels, real, synthetic):
         "visualization": {
             "type": "grouped_bar",
             "flag": "topn",
+            "xunit": unit,
             "labels": list(labels),
             "real": [float(x) for x in real],
             "synthetic": [float(x) for x in synthetic]

@@ -16,26 +16,27 @@ def rms(*values):
 
 
 def save_json(data, prefix, output_dir="results"):
-    os.makedirs(output_dir, exist_ok=True)
+    # os.makedirs(output_dir, exist_ok=True)
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    unique_id = uuid.uuid4().hex[:8]
+    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # unique_id = uuid.uuid4().hex[:8]
 
-    filename = f"{prefix}_{timestamp}_{unique_id}.json"
-    filepath = os.path.join(output_dir, filename)
+    # filename = f"{prefix}_{timestamp}_{unique_id}.json"
+    # filepath = os.path.join(output_dir, filename)
 
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    # with open(filepath, "w", encoding="utf-8") as f:
+    #     json.dump(data, f, indent=2, ensure_ascii=False)
 
-    size_bytes = os.path.getsize(filepath)
-    size_mb = size_bytes / (1024 * 1024)
+    # size_bytes = os.path.getsize(filepath)
+    # size_mb = size_bytes / (1024 * 1024)
 
-    print(
-        f"Saved {prefix}: {filepath} "
-        f"({size_bytes:,} bytes / {size_mb:.2f} MB)"
-    )
+    # print(
+    #     f"Saved {prefix}: {filepath} "
+    #     f"({size_bytes:,} bytes / {size_mb:.2f} MB)"
+    # )
 
-    return filepath, size_bytes
+    # return filepath, size_byte
+    pass
 
 
 class EvaluationController:

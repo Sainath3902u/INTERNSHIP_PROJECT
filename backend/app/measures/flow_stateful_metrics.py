@@ -1,16 +1,10 @@
-import sys
-import os
 import pandas as pd
 import numpy as np
 from scipy.spatial.distance import jensenshannon
 from scipy.stats import wasserstein_distance
 from tqdm import tqdm
 
-from app.measures.packet_metrics import (
-    build_topn,
-    build_distribution,
-    build_topnkey
-)
+from app.measures.response_builders import *
 
 def jensenshannon_wrapper(real_df_1, gen_df_2, base=2):
     """
@@ -92,26 +86,6 @@ def flow_srcip_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the average
     packet inter-arrival times for the top N source IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, AVG(gap) AS avg_interval
-        FROM gaps
-        GROUP BY srcip
-        HAVING COUNT(*) > 10
-        ORDER BY avg_interval DESC
-
-        Therefore, each DataFrame contains one row per source IP with
-        the average packet inter-arrival time in the 'avg_interval' column.
     """
 
     # Extract top-N average inter-arrival times from SQL aggregation results
@@ -125,11 +99,15 @@ def flow_srcip_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_intervals, gen_intervals)
 
+    real_vis = real_intervals / 1e9
+    gen_vis = gen_intervals / 1e9
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_intervals,
-        gen_intervals
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_srcip_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2):
@@ -191,17 +169,6 @@ def flow_srcip_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the flow durations
     for the top N source IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, MAX(time) - MIN(time) AS duration
-        FROM <table_name>
-        GROUP BY srcip
-        ORDER BY duration DESC
-
-        Therefore, each DataFrame contains one row per source IP with
-        the flow duration in the 'duration' column.
     """
 
     # Extract top-N durations from SQL aggregation results
@@ -215,11 +182,15 @@ def flow_srcip_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_top, gen_top)
 
+    real_vis = real_top / 1e9
+    gen_vis = gen_top / 1e9
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_top,
-        gen_top
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_srcip_stateful_flowduration_distribution(real_df_1, gen_df_2):
@@ -272,23 +243,6 @@ def flow_srcip_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of byte rates
     for the top N source IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip,
-               SUM(pkt_len) /
-               CASE
-                   WHEN MAX(time) - MIN(time) = 0 THEN 1
-                   ELSE MAX(time) - MIN(time)
-               END AS byte_rate
-        FROM <table_name>
-        GROUP BY srcip
-        HAVING COUNT(*) > 1
-        ORDER BY byte_rate DESC
-
-        Therefore, each DataFrame contains one row per source IP with
-        the byte rate in the 'byte_rate' column.
     """
 
     # Extract top-N byte rates from SQL aggregation results
@@ -302,11 +256,15 @@ def flow_srcip_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_rates, gen_rates)
 
+    real_vis = real_rates * 1e6 / (1024 * 1024)
+    gen_vis  = gen_rates  * 1e6 / (1024 * 1024)
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_rates,
-        gen_rates
+        real_vis,
+        gen_vis,
+        "MB/s"
     )
 
 def flow_srcip_stateful_byterate_distribution(real_df_1, gen_df_2):
@@ -364,10 +322,6 @@ def flow_srcip_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the standard
     deviations of packet inter-arrival times for the top N source IPs.
-
-    SQL input columns:
-        srcip,
-        std_iat
     """
 
     real_topn = real_df_1.head(n)["std_iat"].to_numpy()
@@ -380,11 +334,15 @@ def flow_srcip_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_topn, gen_topn)
 
+    real_vis = real_topn / 1e9
+    gen_vis = gen_topn / 1e9
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_topn,
-        gen_topn
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_srcip_stateful_std_interarrival_distribution(real_df_1, gen_df_2, n=10):
@@ -430,10 +388,6 @@ def flow_srcip_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the coefficients
     of variation (CV) of packet inter-arrival times for the top N source IPs.
-
-    SQL input columns:
-        srcip,
-        cv_iat
     """
 
     real_topn = real_df_1.head(n)["cv_iat"].to_numpy()
@@ -450,7 +404,8 @@ def flow_srcip_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
         score,
         [f"Rank {i+1}" for i in range(max_len)],
         real_topn,
-        gen_topn
+        gen_topn,
+        "CV"
     )
 
 def flow_srcip_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
@@ -498,26 +453,6 @@ def flow_dstip_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the average
     packet inter-arrival times for the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT dstip, AVG(gap) AS avg_interval
-        FROM gaps
-        GROUP BY dstip
-        HAVING COUNT(*) > 10
-        ORDER BY avg_interval DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the average packet inter-arrival time in the 'avg_interval' column.
     """
 
     # Extract top-N average inter-arrival times from SQL aggregation results
@@ -531,11 +466,15 @@ def flow_dstip_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_intervals, gen_intervals)
 
+    real_vis = real_intervals / 1e6
+    gen_vis = gen_intervals / 1e6
+    
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_intervals,
-        gen_intervals
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_dstip_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2):
@@ -581,17 +520,6 @@ def flow_dstip_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the flow durations
     for the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip, MAX(time) - MIN(time) AS duration
-        FROM <table_name>
-        GROUP BY dstip
-        ORDER BY duration DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the flow duration in the 'duration' column.
     """
 
     # Extract top-N durations from SQL aggregation results
@@ -605,11 +533,15 @@ def flow_dstip_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_top, gen_top)
 
+    real_vis = real_top / 1e6
+    gen_vis = gen_top / 1e6
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_top,
-        gen_top
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_dstip_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
@@ -670,23 +602,6 @@ def flow_dstip_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of byte rates
     for the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT dstip,
-               SUM(pkt_len) /
-               CASE
-                   WHEN MAX(time) - MIN(time) = 0 THEN 1
-                   ELSE MAX(time) - MIN(time)
-               END AS byte_rate
-        FROM <table_name>
-        GROUP BY dstip
-        HAVING COUNT(*) > 1
-        ORDER BY byte_rate DESC
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the byte rate in the 'byte_rate' column.
     """
 
     # Extract top-N byte rates from SQL aggregation results
@@ -700,11 +615,15 @@ def flow_dstip_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_rates, gen_rates)
 
+    real_vis = real_rates * 1e6 / (1024 * 1024)
+    gen_vis  = gen_rates  * 1e6 / (1024 * 1024)
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_rates,
-        gen_rates
+        real_vis,
+        gen_vis,
+        "MB/s"
     )
 
 def flow_dstip_stateful_byterate_distribution(real_df_1, gen_df_2):
@@ -770,29 +689,7 @@ def flow_dstip_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the standard
     deviations of packet inter-arrival times for the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT dstip, STDDEV_POP(gap) AS std_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY dstip
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the standard deviation of packet inter-arrival times in the
-        'std_iat' column.
     """
-
-    import numpy as np
 
     # Extract top-N std inter-arrival values from SQL aggregation results
     real_topn = real_df_1.head(n)["std_iat"].to_numpy()
@@ -805,11 +702,15 @@ def flow_dstip_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_topn, gen_topn)
 
+    real_vis = real_topn / 1e6
+    gen_vis = gen_topn / 1e6
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_topn,
-        gen_topn
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_dstip_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
@@ -875,28 +776,6 @@ def flow_dstip_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the coefficients
     of variation (CV) of packet inter-arrival times for the top N destination IPs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT dstip,
-               STDDEV_POP(gap) / AVG(gap) AS cv_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY dstip
-        HAVING AVG(gap) > 0
-
-        Therefore, each DataFrame contains one row per destination IP with
-        the coefficient of variation of packet inter-arrival times in
-        the 'cv_iat' column.
     """
 
     # Extract top-N CV values from SQL aggregation results
@@ -914,7 +793,8 @@ def flow_dstip_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
         score,
         [f"Rank {i+1}" for i in range(max_len)],
         real_topn,
-        gen_topn
+        gen_topn,
+        "CV"
     )
 
 def flow_dstip_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
@@ -985,27 +865,6 @@ def flow_ippair_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the average
     packet inter-arrival times for the top N source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip,
-                   dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, AVG(gap) AS avg_interval
-        FROM gaps
-        GROUP BY srcip, dstip
-        HAVING COUNT(*) > 10
-        ORDER BY avg_interval DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the average packet inter-arrival time in the 'avg_interval' column.
     """
 
     # Extract top-N average inter-arrival times from SQL aggregation results
@@ -1019,11 +878,15 @@ def flow_ippair_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_intervals, gen_intervals)
 
+    real_vis = real_intervals / 1e6
+    gen_vis = gen_intervals / 1e6
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_intervals,
-        gen_intervals
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_ippair_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2, n=10):
@@ -1089,17 +952,6 @@ def flow_ippair_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the flow durations
     for the top N source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, MAX(time) - MIN(time) AS duration
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        ORDER BY duration DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the flow duration in the 'duration' column.
     """
 
     # Extract top-N durations from SQL aggregation results
@@ -1113,11 +965,15 @@ def flow_ippair_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_top, gen_top)
 
+    real_vis = real_top / 1e6
+    gen_vis = gen_top / 1e6
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_top,
-        gen_top
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_ippair_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
@@ -1175,24 +1031,6 @@ def flow_ippair_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of byte rates
     for the top N source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip,
-               dstip,
-               SUM(pkt_len) /
-               CASE
-                   WHEN MAX(time) - MIN(time) = 0 THEN 1
-                   ELSE MAX(time) - MIN(time)
-               END AS byte_rate
-        FROM <table_name>
-        GROUP BY srcip, dstip
-        HAVING COUNT(*) > 1
-        ORDER BY byte_rate DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the byte rate in the 'byte_rate' column.
     """
 
     # Extract top-N byte rates from SQL aggregation results
@@ -1206,11 +1044,15 @@ def flow_ippair_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_rates, gen_rates)
 
+    real_vis = real_rates * 1e6 / (1024 * 1024)
+    gen_vis = gen_rates * 1e6  / (1024 * 1024)
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_rates,
-        gen_rates
+        real_vis,
+        gen_vis,
+        "MB/s"
     )
 
 def flow_ippair_stateful_byterate_distribution(real_df_1, gen_df_2, n=10):
@@ -1274,28 +1116,6 @@ def flow_ippair_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     Computes the average Absolute Relative Error (ARE) of the standard
     deviations of packet inter-arrival times for the top N
     source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip,
-                   dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, STDDEV_POP(gap) AS std_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY srcip, dstip
-        ORDER BY std_iat DESC
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the standard deviation of packet inter-arrival times in the
-        'std_iat' column.
     """
 
     # Extract top-N std inter-arrival values from SQL aggregation results
@@ -1309,11 +1129,15 @@ def flow_ippair_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_topn, gen_topn)
 
+    real_vis = real_topn / 1e6
+    gen_vis = gen_topn / 1e6
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_topn,
-        gen_topn
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_ippair_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
@@ -1382,28 +1206,6 @@ def flow_ippair_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
     Computes the average Absolute Relative Error (ARE) of the coefficients
     of variation (CV) of packet inter-arrival times for the top N
     source-destination IP pairs.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip,
-                   dstip,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, STDDEV_POP(gap) / AVG(gap) AS cv_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY srcip, dstip
-        HAVING AVG(gap) > 0
-
-        Therefore, each DataFrame contains one row per (srcip, dstip) pair
-        with the coefficient of variation of packet inter-arrival times in
-        the 'cv_iat' column.
     """
 
     # Sort descending and take top-N, matching original behavior
@@ -1421,7 +1223,8 @@ def flow_ippair_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10):
         score,
         [f"Rank {i+1}" for i in range(max_len)],
         real_topn,
-        gen_topn
+        gen_topn,
+        "CV"
     )
 
 def flow_ippair_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):
@@ -1494,27 +1297,6 @@ def flow_fivetuple_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=1
     """
     Computes the average Absolute Relative Error (ARE) of the average
     packet inter-arrival times for the top N 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip, dstip, srcport, dstport, proto,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip, srcport, dstport, proto
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, srcport, dstport, proto,
-               AVG(gap) AS avg_interval
-        FROM gaps
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        HAVING COUNT(*) > 10
-        ORDER BY avg_interval DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the average packet inter-arrival time in the 'avg_interval' column.
     """
 
     # Extract top-N average inter-arrival times from SQL aggregation results
@@ -1528,11 +1310,15 @@ def flow_fivetuple_stateful_avgpacketinterval_topnvalue(real_df_1, gen_df_2, n=1
 
     score = topn_value_distance(real_intervals, gen_intervals)
 
+    real_vis = real_intervals / 1e6
+    gen_vis = gen_intervals / 1e6
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_intervals,
-        gen_intervals
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_fivetuple_stateful_avgpacketinterval_distribution(real_df_1, gen_df_2, n=10):
@@ -1598,18 +1384,6 @@ def flow_fivetuple_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of the flow durations
     for the top N 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, srcport, dstport, proto,
-               MAX(time) - MIN(time) AS duration
-        FROM <table_name>
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        ORDER BY duration DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the flow duration in the 'duration' column.
     """
 
     # Extract top-N durations from SQL aggregation results
@@ -1623,11 +1397,15 @@ def flow_fivetuple_stateful_flowduration_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_top, gen_top)
 
+    real_vis = real_top / 1e6
+    gen_vis = gen_top / 1e6
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_top,
-        gen_top
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_fivetuple_stateful_flowduration_distribution(real_df_1, gen_df_2, n=10):
@@ -1684,23 +1462,6 @@ def flow_fivetuple_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
     """
     Computes the average Absolute Relative Error (ARE) of byte rates
     for the top N 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        SELECT srcip, dstip, srcport, dstport, proto,
-               SUM(pkt_len) /
-               CASE
-                   WHEN MAX(time) - MIN(time) = 0 THEN 1
-                   ELSE MAX(time) - MIN(time)
-               END AS byte_rate
-        FROM <table_name>
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        HAVING COUNT(*) > 1
-        ORDER BY byte_rate DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the byte rate in the 'byte_rate' column.
     """
 
     # Extract top-N byte rates from SQL aggregation results
@@ -1714,11 +1475,15 @@ def flow_fivetuple_stateful_byterate_topnvalue(real_df_1, gen_df_2, n=10):
 
     score = topn_value_distance(real_rates, gen_rates)
 
+    real_vis = real_rates * 1e6 / (1024 * 1024)
+    gen_vis = gen_rates * 1e6 / (1024 * 1024)
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_rates,
-        gen_rates
+        real_vis,
+        gen_vis,
+        "MB/s"
     )
 
 def flow_fivetuple_stateful_byterate_distribution(real_df_1, gen_df_2, n=10):
@@ -1780,28 +1545,6 @@ def flow_fivetuple_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10
     """
     Computes the average Absolute Relative Error (ARE) of the standard
     deviations of packet inter-arrival times for the top N 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip, dstip, srcport, dstport, proto,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip, srcport, dstport, proto
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, srcport, dstport, proto,
-               STDDEV_POP(gap) AS std_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        ORDER BY std_iat DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the standard deviation of packet inter-arrival times in the
-        'std_iat' column.
     """
 
     # Extract top-N std inter-arrival values from SQL aggregation results
@@ -1815,11 +1558,15 @@ def flow_fivetuple_stateful_std_interarrival_topnvalue(real_df_1, gen_df_2, n=10
 
     score = topn_value_distance(real_topn, gen_topn)
 
+    real_vis = real_topn / 1e6
+    gen_vis = gen_topn / 1e6
+
     return build_topn(
         score,
         [f"Rank {i+1}" for i in range(max_len)],
-        real_topn,
-        gen_topn
+        real_vis,
+        gen_vis,
+        "s"
     )
 
 def flow_fivetuple_stateful_std_interarrival_distribution(real_df_1, gen_df_2):
@@ -1886,29 +1633,6 @@ def flow_fivetuple_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10)
     """
     Computes the average Absolute Relative Error (ARE) of the coefficients
     of variation (CV) of packet inter-arrival times for the top N 5-tuple flows.
-
-    Note:
-        The inputs are SQL aggregation results generated from:
-
-        WITH gaps AS (
-            SELECT srcip, dstip, srcport, dstport, proto,
-                   time - LAG(time) OVER (
-                       PARTITION BY srcip, dstip, srcport, dstport, proto
-                       ORDER BY time
-                   ) AS gap
-            FROM <table_name>
-        )
-        SELECT srcip, dstip, srcport, dstport, proto,
-               STDDEV_POP(gap) / AVG(gap) AS cv_iat
-        FROM gaps
-        WHERE gap IS NOT NULL
-        GROUP BY srcip, dstip, srcport, dstport, proto
-        HAVING AVG(gap) > 0
-        ORDER BY cv_iat DESC
-
-        Therefore, each DataFrame contains one row per 5-tuple flow with
-        the coefficient of variation of packet inter-arrival times in the
-        'cv_iat' column.
     """
 
     # Extract top-N CV values from SQL aggregation results
@@ -1926,7 +1650,8 @@ def flow_fivetuple_stateful_cv_interarrival_topnvalue(real_df_1, gen_df_2, n=10)
         score,
         [f"Rank {i+1}" for i in range(max_len)],
         real_topn,
-        gen_topn
+        gen_topn,
+        "CV"
     )
 
 def flow_fivetuple_stateful_cv_interarrival_distribution(real_df_1, gen_df_2):

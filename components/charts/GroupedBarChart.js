@@ -27,6 +27,21 @@ export default function CategoryDistributionChart({ chartData }) {
     synthetic: chartData.synthetic[idx],
   }));
   const isTopN = chartData?.flag === 'topn';
+  const unit = chartData?.xunit || '';
+
+  const formatValue = (value) => {
+    if (isTopN) {
+      const num = Number(value);
+      return `${num < 1
+        ? num.toFixed(4)
+        : num.toLocaleString(undefined, {
+            maximumFractionDigits: 2,
+          })
+      }${unit ? ` ${unit}` : ''}`;
+    }
+
+    return `${(value * 100).toFixed(1)}%`;
+  };
 
   return (
     <div className="w-full h-[500px] bg-white p-4 rounded-xl border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
@@ -52,11 +67,7 @@ export default function CategoryDistributionChart({ chartData }) {
             tick={{ fill: '#94A3B8', fontSize: 12 }}
             axisLine={{ stroke: '#475569' }}
             tickLine={{ stroke: '#475569' }}
-            tickFormatter={(v) =>
-              isTopN
-                ? Number(v).toLocaleString()
-                : `${(v * 100).toFixed(1)}%`
-            }
+            tickFormatter={formatValue}
           />
 
           <YAxis
@@ -71,7 +82,7 @@ export default function CategoryDistributionChart({ chartData }) {
           <Tooltip
             formatter={(value, name) => [
               isTopN
-                ? Number(value).toLocaleString()
+                ? `${Number(value).toLocaleString()}${unit ? ` ${unit}` : ''}`
                 : `${(value * 100).toFixed(2)}%`,
               name,
             ]}
