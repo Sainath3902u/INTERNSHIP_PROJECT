@@ -13,6 +13,9 @@ export default function HomePage() {
         <p className="text-base sm:text-lg text-slate-500 max-w-2xl dark:text-slate-400">
           An interactive dashboard for evaluating synthetic network data by comparing packet- and flow-level metrics with real-world traffic.
         </p>
+        <ul className="mt-2 list-disc list-inside text-sm text-slate-700 dark:text-slate-300 space-y-1">
+          <li>Each dataset must be less than <strong>50 MB</strong>.</li>
+        </ul>
       </div>
 
       <UploadForm />
