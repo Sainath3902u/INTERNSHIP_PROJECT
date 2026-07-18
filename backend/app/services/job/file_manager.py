@@ -1,10 +1,17 @@
-from pathlib import Path
-import shutil
+"""
+FileManager handles uploaded files.
+
+It saves uploaded files to disk in chunks, enforces the configured upload
+size limit, and logs upload details.
+"""
+
+import logging
 import time
+from pathlib import Path
 
+from app.core.config import settings
 
-MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024  # 2 GB safety cap
-
+logger = logging.getLogger(__name__)
 
 class FileManager:
 
@@ -16,6 +23,7 @@ class FileManager:
         route, or it will block the event loop for the whole upload.
         """
         start = time.perf_counter()
+        max_bytes = settings.max_upload_bytes
 
         destination.parent.mkdir(parents=True, exist_ok=True)
 
@@ -26,14 +34,20 @@ class FileManager:
                 if not chunk:
                     break
                 written += len(chunk)
-                if written > MAX_UPLOAD_BYTES:
+                if written > max_bytes:
                     buffer.close()
                     destination.unlink(missing_ok=True)
                     raise ValueError(
                         f"Upload exceeds max allowed size "
-                        f"({MAX_UPLOAD_BYTES / (1024**3):.0f} GB)"
+                        f"({max_bytes / (1024**3):.0f} GB)"
                     )
                 buffer.write(chunk)
 
-        print(f"SERVER SAVE: {written / (1024*1024):.2f} MB in "
-              f"{time.perf_counter() - start:.2f}s")
+        logger.info(
+            "upload saved",
+            extra={
+                "destination": str(destination),
+                "size_mb": round(written / (1024 * 1024), 2),
+                "duration_sec": round(time.perf_counter() - start, 2),
+            },
+        )
