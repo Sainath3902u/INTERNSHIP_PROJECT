@@ -50,11 +50,7 @@ class JobExecutor:
         )
 
         try:
-
-            # ------------------------------------------------------------------
             # Load Real Dataset
-            # ------------------------------------------------------------------
-
             start = time.perf_counter()
 
             CSVLoader.load_csv_to_table(
@@ -64,14 +60,11 @@ class JobExecutor:
             )
 
             print(
-                f"✅ Real dataset loaded in "
+                f"Real dataset loaded in "
                 f"{time.perf_counter() - start:.2f}s"
             )
 
-            # ------------------------------------------------------------------
             # Load Synthetic Dataset
-            # ------------------------------------------------------------------
-
             start = time.perf_counter()
 
             CSVLoader.load_csv_to_table(
@@ -81,32 +74,11 @@ class JobExecutor:
             )
 
             print(
-                f"✅ Synthetic dataset loaded in "
+                f"Synthetic dataset loaded in "
                 f"{time.perf_counter() - start:.2f}s"
             )
 
-            # ------------------------------------------------------------------
-            # Verify schema
-            # ------------------------------------------------------------------
-
-            print("\nReal schema:")
-            print(
-                conn.execute(
-                    "DESCRIBE real_packets"
-                ).fetchall()
-            )
-
-            print("\nSynthetic schema:")
-            print(
-                conn.execute(
-                    "DESCRIBE synthetic_packets"
-                ).fetchall()
-            )
-
-            # ------------------------------------------------------------------
             # Build Stateful Tables
-            # ------------------------------------------------------------------
-
             start = time.perf_counter()
 
             db_path = JobManager.get_database_path(job_id)
@@ -141,14 +113,11 @@ class JobExecutor:
                 synthetic_conn.close()
 
             print(
-                f"✅ Stateful tables built in "
+                f"Stateful tables built in "
                 f"{time.perf_counter() - start:.2f}s"
             )
 
-            # ------------------------------------------------------------------
             # Evaluation
-            # ------------------------------------------------------------------
-
             start = time.perf_counter()
 
             result = EvaluationController.run_all(conn)
@@ -158,10 +127,7 @@ class JobExecutor:
                 f"{time.perf_counter() - start:.2f}s"
             )
 
-            # ------------------------------------------------------------------
             # Save Result
-            # ------------------------------------------------------------------
-
             start = time.perf_counter()
 
             result_path = JobManager.get_result_path(job_id)
@@ -175,12 +141,12 @@ class JobExecutor:
                 )
 
             print(
-                f"✅ Results saved in "
+                f"Results saved in "
                 f"{time.perf_counter() - start:.2f}s"
             )
 
             print(
-                f"\n🎯 TOTAL JOB TIME: "
+                f"\nTOTAL JOB TIME: "
                 f"{time.perf_counter() - overall_start:.2f}s"
             )
 
@@ -192,7 +158,7 @@ class JobExecutor:
 
             print("\n")
             print("=" * 80)
-            print("❌ JOB FAILED")
+            print("JOB FAILED")
             print("=" * 80)
 
             print(f"Error Type: {type(e).__name__}")
@@ -206,5 +172,4 @@ class JobExecutor:
             raise
 
         finally:
-
             conn.close()
