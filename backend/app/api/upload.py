@@ -1,6 +1,13 @@
+"""
+Upload API endpoints.
+Handle file uploads for benchmark jobs and update the job status during
+the upload process.
+"""
+
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.concurrency import run_in_threadpool
 
+from app.database import job_store
 from app.services.job.job_manager import JobManager
 from app.services.job.file_manager import FileManager
 
@@ -16,8 +23,8 @@ def _validate_csv(file: UploadFile):
             status_code=400,
             detail="Only .csv files are accepted"
         )
-    
-    
+
+
 @router.post("/create-job")
 def create_job():
     job_id = JobManager.create_job()
@@ -41,6 +48,7 @@ async def upload_real(job_id: str, file: UploadFile = File(...)):
     except ValueError as e:
         raise HTTPException(status_code=413, detail=str(e))
 
+    job_store.set_status(job_id, job_store.STATUS_UPLOADING)
     return {"message": "Real CSV uploaded"}
 
 
@@ -59,4 +67,5 @@ async def upload_synthetic(job_id: str, file: UploadFile = File(...)):
     except ValueError as e:
         raise HTTPException(status_code=413, detail=str(e))
 
+    job_store.set_status(job_id, job_store.STATUS_UPLOADING)
     return {"message": "Synthetic CSV uploaded"}
