@@ -1,7 +1,6 @@
 import numpy as np
 from collections import defaultdict
 
-
 class ReportGenerator:
 
     @staticmethod
@@ -35,19 +34,42 @@ class ReportGenerator:
     def generate(cls, results):
 
         metrics = []
+        failed = []
 
         for result in results:
-            for metric in result["metrics"]:
 
-                metrics.append({
+            # A query that failed entirely (bad SQL, missing column, etc.)
+            # has no metrics to unpack - record it as a failure and move on.
+            if result.get("status") == "error":
+                failed.append({
                     "query_id": result["query_id"],
                     "query_section": result["query_section"],
                     "query_description": result["query_description"],
-
-                    **metric,
-
-                    "score": round(float(metric["score"]), 4)
+                    "error": result.get("error", "unknown error"),
                 })
+                continue
+
+            for metric in result["metrics"]:
+
+                base = {
+                    "query_id": result["query_id"],
+                    "query_section": result["query_section"],
+                    "query_description": result["query_description"],
+                    **metric,
+                }
+
+                # A metric can fail independently of its query (e.g. shape
+                # mismatch, unknown metric name). Keep it visible in the
+                # failure list, but don't let it poison score aggregates.
+                if metric.get("status") == "error" or metric.get("score") is None:
+                    failed.append({
+                        **base,
+                        "error": metric.get("error", "unknown error"),
+                    })
+                    continue
+
+                base["score"] = round(float(metric["score"]), 4)
+                metrics.append(base)
 
         if not metrics:
             return {
@@ -56,7 +78,9 @@ class ReportGenerator:
                 "by_category": {},
                 "by_metric_type": {},
                 "best_5": [],
-                "worst_5": []
+                "worst_5": [],
+                "failed_count": len(failed),
+                "failed": failed,
             }
 
         scores = [m["score"] for m in metrics]
@@ -144,5 +168,8 @@ class ReportGenerator:
             key=lambda x: x["score"],
             reverse=True
         )[:5]
+
+        report["failed_count"] = len(failed)
+        report["failed"] = failed
 
         return report
