@@ -7,12 +7,12 @@ class CSVLoader:
     def load_csv_to_table(
         csv_path: str,
         table_name: str,
-        db
+        conn
     ):
 
         start = time.perf_counter()
 
-        db.conn.execute(f"""
+        conn.execute(f"""
             CREATE OR REPLACE TABLE
             {table_name}
             AS
@@ -22,19 +22,15 @@ class CSVLoader:
             )
         """)
 
-        rows = db.conn.execute(f"""
+        rows = conn.execute(f"""
             SELECT COUNT(*)
             FROM {table_name}
         """).fetchone()[0]
 
         print(
-            f"Created table {table_name} "
-            f"in {time.perf_counter() - start:.3f}s"
-        )
-
-        CSVLoader.build_stateful_tables(
-            table_name,
-            db
+            f"Created {table_name} "
+            f"({rows:,} rows) "
+            f"in {time.perf_counter() - start:.2f}s"
         )
 
         return {
@@ -44,8 +40,8 @@ class CSVLoader:
 
     @staticmethod
     def build_stateful_tables(
-        table_name,
-        db
+        table_name: str,
+        conn
     ):
 
         gap_tables = {
@@ -107,7 +103,7 @@ class CSVLoader:
 
             start = time.perf_counter()
 
-            db.conn.execute(f"""
+            conn.execute(f"""
                 CREATE OR REPLACE TABLE
                 {table_name}_{name}_gaps
                 AS
