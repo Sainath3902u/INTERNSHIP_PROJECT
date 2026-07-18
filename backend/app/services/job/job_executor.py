@@ -173,3 +173,9 @@ class JobExecutor:
 
         finally:
             conn.close()
+
+    
+
+    @staticmethod
+    def run_parallel(job_id: str):
+        pass
