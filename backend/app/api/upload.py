@@ -1,146 +1,60 @@
-from fastapi import APIRouter, HTTPException
-from app.services.ingestion.csv_loader import CSVLoader
-from app.database.db import db
+from fastapi import APIRouter, UploadFile, File, HTTPException
 
-import requests
-import tempfile
-import os
-import traceback
+from app.services.job.job_manager import JobManager
+from app.services.job.file_manager import FileManager
 
 router = APIRouter()
 
-REAL_CSV_URL = (
-    "https://github.com/naresh-au27/"
-    "packet-data-storage/releases/download/"
-    "CSV/real.csv"
-)
 
-SYNTHETIC_CSV_URL = (
-    "https://github.com/naresh-au27/"
-    "packet-data-storage/releases/download/"
-    "CSV/synthetic.csv"
-)
+@router.post("/create-job")
+def create_job():
+
+    job_id = JobManager.create_job()
+
+    return {
+        "job_id": job_id
+    }
 
 
-def download_csv(url: str) -> str:
+@router.post("/upload-real/{job_id}")
+async def upload_real(
+    job_id: str,
+    file: UploadFile = File(...)
+):
 
-    print(f"Downloading: {url}")
-
-    response = requests.get(
-        url,
-        stream=True,
-        timeout=600
-    )
-
-    response.raise_for_status()
-
-    temp = tempfile.NamedTemporaryFile(
-        delete=False,
-        suffix=".csv"
-    )
-
-    total = 0
-
-    for chunk in response.iter_content(
-        chunk_size=1024 * 1024
-    ):
-        if chunk:
-            temp.write(chunk)
-            total += len(chunk)
-
-    temp.close()
-
-    print(
-        f"Downloaded {total / 1024 / 1024:.2f} MB "
-        f"to {temp.name}"
-    )
-
-    return temp.name
-
-
-@router.post("/load-datasets")
-async def load_datasets():
-
-    real_file = None
-    synthetic_file = None
-
-    try:
-
-        print("START DATASET LOAD")
-
-        real_file = download_csv(
-            REAL_CSV_URL
-        )
-
-        synthetic_file = download_csv(
-            SYNTHETIC_CSV_URL
-        )
-
-        print(
-            f"real file exists = "
-            f"{os.path.exists(real_file)}"
-        )
-
-        print(
-            f"synthetic file exists = "
-            f"{os.path.exists(synthetic_file)}"
-        )
-
-        print("Loading real_packets...")
-
-        real_result = (
-            CSVLoader.load_csv_to_table(
-                real_file,
-                "real_packets",
-                db
-            )
-        )
-
-        print(real_result)
-
-        print(
-            "Loading synthetic_packets..."
-        )
-
-        synthetic_result = (
-            CSVLoader.load_csv_to_table(
-                synthetic_file,
-                "synthetic_packets",
-                db
-            )
-        )
-
-        print(synthetic_result)
-
-        print(
-            "DATASET LOAD COMPLETE"
-        )
-
-        return {
-            "status": "success",
-            "real": real_result,
-            "synthetic": synthetic_result
-        }
-
-    except Exception as e:
-
-        traceback.print_exc()
-
+    if not JobManager.job_exists(job_id):
         raise HTTPException(
-            status_code=500,
-            detail=str(e)
+            status_code=404,
+            detail="Invalid Job ID"
         )
 
-    finally:
+    FileManager.save_upload(
+        file,
+        JobManager.get_real_csv(job_id)
+    )
 
-        if (
-            real_file and
-            os.path.exists(real_file)
-        ):
-            os.remove(real_file)
+    return {
+        "message": "Real CSV uploaded"
+    }
 
-        if (
-            synthetic_file and
-            os.path.exists(synthetic_file)
-        ):
-            os.remove(synthetic_file)
+
+@router.post("/upload-synthetic/{job_id}")
+async def upload_synthetic(
+    job_id: str,
+    file: UploadFile = File(...)
+):
+
+    if not JobManager.job_exists(job_id):
+        raise HTTPException(
+            status_code=404,
+            detail="Invalid Job ID"
+        )
+
+    FileManager.save_upload(
+        file,
+        JobManager.get_synthetic_csv(job_id)
+    )
+
+    return {
+        "message": "Synthetic CSV uploaded"
+    }
