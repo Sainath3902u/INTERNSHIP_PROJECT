@@ -17,7 +17,7 @@ export default function UploadForm() {
 
     const end = performance.now();
     const latencySeconds = ((end - start) / 1000).toFixed(2);
-    console.log(`🚀 ${label}: ${latencySeconds} s`);
+    console.log(`${label}: ${latencySeconds} s`);
 
     return response;
   };
@@ -58,7 +58,7 @@ export default function UploadForm() {
       realForm.append('file', realFile);
 
       console.log(
-        `📁 Real file: ${realFile.name} (${(
+        `Real file: ${realFile.name} (${(
           realFile.size /
           1024 /
           1024
@@ -83,7 +83,7 @@ export default function UploadForm() {
       syntheticForm.append('file', syntheticFile);
 
       console.log(
-        `📁 Synthetic file: ${syntheticFile.name} (${(
+        `Synthetic file: ${syntheticFile.name} (${(
           syntheticFile.size /
           1024 /
           1024
@@ -128,7 +128,7 @@ export default function UploadForm() {
       const workflowEnd = performance.now();
 
       console.log(
-        `✅ Total Workflow Time: ${(
+        `Total Workflow Time: ${(
           (workflowEnd - workflowStart) / 1000
         ).toFixed(2)} s`
       );
@@ -142,7 +142,7 @@ export default function UploadForm() {
       console.error('Connection Error:', error);
 
       console.log(
-        `❌ Workflow Failed After: ${(
+        `Workflow Failed After: ${(
           workflowEnd - workflowStart
         ).toFixed(2)} ms`
       );

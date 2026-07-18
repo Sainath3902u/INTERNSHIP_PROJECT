@@ -81,23 +81,6 @@ class JobManager:
             JobManager.get_database_dir(job_id)
             / "benchmark.duckdb"
         )
-    
-    @staticmethod
-    def get_real_parquet(job_id):
-
-        return (
-            JobManager.get_upload_dir(job_id)
-            / "real.parquet"
-        )
-
-
-    @staticmethod
-    def get_synthetic_parquet(job_id):
-
-        return (
-            JobManager.get_upload_dir(job_id)
-            / "synthetic.parquet"
-        )
 
     @staticmethod
     def get_real_csv(job_id):
