@@ -72,12 +72,18 @@ export default function CategoryPage() {
         <span className="text-slate-900 font-semibold dark:text-white">{liveCategoryData.name}</span>
       </nav>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 dark:border-slate-800">
         <div>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">{liveCategoryData.name}</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">Granular query verification blocks mapped inside this sector.</p>
         </div>
       </div>
+      <Link 
+          href={`/dashboard/${categoryKey}/stats`} 
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium shadow-sm transition-colors text-center inline-flex items-center justify-center gap-2"
+        >
+          📊 View Analytical Statistics
+        </Link>
 
       {/*table block*/}
       <QueryTable queries={liveCategoryData.queries} categoryKey={categoryKey} />
