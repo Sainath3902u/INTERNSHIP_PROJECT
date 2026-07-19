@@ -61,3 +61,5 @@ __pycache__/
 # Python compiled files
 *.pyo
 *.pyd
+
+storage/
