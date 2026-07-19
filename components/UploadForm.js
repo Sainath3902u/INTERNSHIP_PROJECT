@@ -3,12 +3,29 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+// How often to poll job status, and how long to wait before giving up.
+// The backend runs evaluation in the background now,
+// so the frontend can no longer assume one blocking request returns the
+// result - it has to ask "are we done yet?" until the job reaches a
+// terminal state (done/failed).
+const POLL_INTERVAL_MS = 1500;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
+const STATUS_LABELS = {
+  creating: 'Creating job...',
+  uploading: 'Uploading datasets...',
+  queued: 'Queued for evaluation...',
+  running: 'Running analytical models...',
+  done: 'Done!',
+};
+
 export default function UploadForm() {
   const router = useRouter();
 
   const [realFile, setRealFile] = useState(null);
   const [syntheticFile, setSyntheticFile] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [statusLabel, setStatusLabel] = useState('');
 
   const timedFetch = async (url, options, label) => {
     const start = performance.now();
@@ -22,6 +39,38 @@ export default function UploadForm() {
     return response;
   };
 
+  // Poll GET /jobs/{job_id}/status until it reaches "done" or "failed".
+  // Throws on failure (with the backend's error message) or on timeout,
+  // so the caller's existing try/catch handles both the same way it
+  // already handles upload/network errors.
+  const waitForJobCompletion = async (backendUrl, jobId) => {
+    const deadline = performance.now() + POLL_TIMEOUT_MS;
+
+    while (performance.now() < deadline) {
+      const statusResponse = await fetch(`${backendUrl}/jobs/${jobId}/status`);
+
+      if (!statusResponse.ok) {
+        throw new Error('Lost track of the job while checking status.');
+      }
+
+      const { status, error } = await statusResponse.json();
+
+      if (status === 'failed') {
+        throw new Error(error || 'Evaluation failed.');
+      }
+
+      if (status === 'done') {
+        return;
+      }
+
+      setStatusLabel(STATUS_LABELS[status] ?? STATUS_LABELS.running);
+
+      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+    }
+
+    throw new Error('Evaluation is taking longer than expected. Please try again shortly.');
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
@@ -31,6 +80,7 @@ export default function UploadForm() {
     }
 
     setIsSimulating(true);
+    setStatusLabel(STATUS_LABELS.creating);
 
     const workflowStart = performance.now();
 
@@ -54,6 +104,8 @@ export default function UploadForm() {
       const { job_id } = await jobResponse.json();
 
       // Upload Real Dataset
+      setStatusLabel(STATUS_LABELS.uploading);
+
       const realForm = new FormData();
       realForm.append('file', realFile);
 
@@ -103,20 +155,40 @@ export default function UploadForm() {
         throw new Error('Synthetic upload failed.');
       }
 
-      // Evaluate
+      // Trigger evaluation. The backend enqueues this and returns
+      // immediately with {status: "queued"} - it does NOT return the
+      // result anymore, so this request is fast regardless of dataset
+      // size. The actual evaluation happens in the background; we find
+      // out it's done via polling below.
       const evalResponse = await timedFetch(
-        `${backendUrl}/evaluate/${job_id}`,
+        `${backendUrl}/evaluate/parallel/${job_id}`,
         {
           method: 'POST',
         },
-        'Evaluate Dataset'
+        'Queue Evaluation'
       );
 
       if (!evalResponse.ok) {
-        throw new Error('Evaluation failed.');
+        const body = await evalResponse.json().catch(() => ({}));
+        throw new Error(body.detail || 'Failed to start evaluation.');
       }
 
-      const result = await evalResponse.json();
+      // Poll until the job finishes (or throws on failure/timeout).
+      setStatusLabel(STATUS_LABELS.queued);
+      await waitForJobCompletion(backendUrl, job_id);
+
+      // Now that status is "done", fetch the actual result.
+      const resultResponse = await timedFetch(
+        `${backendUrl}/jobs/${job_id}/result`,
+        { method: 'GET' },
+        'Fetch Result'
+      );
+
+      if (!resultResponse.ok) {
+        throw new Error('Evaluation finished, but the result could not be retrieved.');
+      }
+
+      const result = await resultResponse.json();
 
       localStorage.setItem('job_id', job_id);
 
@@ -148,6 +220,7 @@ export default function UploadForm() {
       );
 
       setIsSimulating(false);
+      setStatusLabel('');
 
       alert(`Failed to analyze datasets: ${error.message}`);
     }
@@ -234,7 +307,7 @@ export default function UploadForm() {
               />
             </svg>
 
-            Running Analytical Models...
+            {statusLabel || 'Working...'}
           </>
         ) : (
           'Analyze Datasets'
