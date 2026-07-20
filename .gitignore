@@ -6,6 +6,16 @@
 benchmark.db
 benchmark.db.wal
 
+# Python bytecode cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment and database runtime files
+venv/
+*.db
+*.db.wal
+
 # Ignore any raw dataset CSV files
 *.csv
 
