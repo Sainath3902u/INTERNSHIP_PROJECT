@@ -23,7 +23,7 @@ def _overall_avg(report):
 # Maximum number of SQL queries to run in parallel within a phase.
 # Each phase has many independent queries, and DuckDB releases the GIL (Global Interpreter Lock),
 # so using multiple threads provides a real performance boost.
-QUERY_WORKERS = 4
+QUERY_WORKERS = 1
 
 class ParallelEvaluationController:
     """
