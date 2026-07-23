@@ -1,13 +1,28 @@
 """
 Job metadata store.
 
-WHY SQLITE (not Postgres) 
--------------------------
-Uses SQLite because it is lightweight, requires no extra setup, and
-handles the application's current workload well. If the application
-needs to support much higher concurrency in the future, this module
-can be replaced with a Postgres implementation without affecting the
-rest of the code.
+WHY THIS EXISTS
+----------------
+Before this, "does the job exist" meant "does the folder exist" - there was
+no status, no timestamps, no way to tell a finished job from an abandoned
+one. That made three things impossible to build properly:
+  1. Status polling for the frontend (was it created / running / done / failed?)
+  2. A storage cleanup policy (cleanup needs to know AGE + STATUS, not just
+     "this folder is untouched" - folder mtime is a bad proxy for "is this
+     job safe to delete", since a slow upload could look identical to an
+     abandoned one).
+  3. A job list / admin view for the dashboard.
+
+WHY SQLITE (not Postgres) FOR NOW
+----------------------------------
+This service processes one benchmark job at a time per phase-set (3
+evaluation phases running concurrently, not hundreds of concurrent jobs).
+SQLite in WAL mode comfortably handles that concurrency level, needs zero
+extra infrastructure to run, and the schema is trivial. If this ever scales
+to many concurrent users hammering the API, swapping this module for a
+Postgres-backed one is a contained change - every caller goes through the
+functions in this file, never raw SQL, so the storage engine is an
+implementation detail.
 
 CONCURRENCY NOTE
 -----------------
@@ -15,7 +30,8 @@ Each function opens and closes its own short-lived connection rather than
 holding one open for the app's lifetime. SQLite connections are not
 guaranteed thread-safe when shared across threads without care, and job
 writes here are infrequent (a handful of status transitions per job) - so
-the overhead of open/close per call is negligible.
+the overhead of open/close per call is negligible and it avoids an entire
+class of "which thread owns this connection" bugs.
 """
 
 import sqlite3
@@ -27,13 +43,15 @@ from typing import Optional
 
 from app.core.config import settings
 
-# Valid job lifecycle states used throughout the application.
-STATUS_CREATED = "created"        # Job created, no files uploaded yet
-STATUS_UPLOADING = "uploading"    # Upload in progress
-STATUS_QUEUED = "queued"          # Waiting to be evaluated
-STATUS_RUNNING = "running"        # Evaluation in progress
-STATUS_DONE = "done"              # Evaluation completed successfully
-STATUS_FAILED = "failed"          # Evaluation failed
+# Valid job lifecycle states. Enforced at the Python layer (not a DB CHECK
+# constraint) to keep this file dependency-free and easy to read; the set of
+# valid transitions is small enough that a shared constant is sufficient.
+STATUS_CREATED = "created"        # job dir made, no files uploaded yet
+STATUS_UPLOADING = "uploading"    # at least one file uploaded
+STATUS_QUEUED = "queued"          # evaluation requested, not yet started
+STATUS_RUNNING = "running"        # ingestion + evaluation in progress
+STATUS_DONE = "done"              # result.json written successfully
+STATUS_FAILED = "failed"          # ingestion or evaluation raised
 
 
 @dataclass
@@ -50,17 +68,14 @@ class JobRecord:
 def _connect() -> sqlite3.Connection:
     settings.job_db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(settings.job_db_path, timeout=30)
-    # Enable WAL mode so reads and writes can happen at the same time.
-    # This lets status checks continue while another thread updates a job.
+    # WAL mode lets readers (status polling) proceed without blocking on a
+    # concurrent writer (a status update from a running job) - important
+    # since polling and job execution happen from different threads.
     conn.execute("PRAGMA journal_mode=WAL")
     conn.row_factory = sqlite3.Row
     return conn
 
 
-"""
-Provide a database cursor and automatically handle
-commit and connection cleanup.
-"""
 @contextmanager
 def _cursor():
     conn = _connect()
@@ -86,7 +101,8 @@ def init_db() -> None:
                 result_downloaded_at   REAL
             )
         """)
-        # Speed up queries that filter or sort jobs by status and update time.
+        # Cleanup and job-list queries both filter/sort by status and age -
+        # this index keeps those cheap even as the jobs table grows.
         cur.execute("""
             CREATE INDEX IF NOT EXISTS idx_jobs_status_updated
             ON jobs (status, updated_at)
@@ -94,7 +110,12 @@ def init_db() -> None:
 
 
 def create_job() -> str:
-    """"Create a new job, store it in the database, and return its ID."""
+    """Insert a new job row in CREATED state and return its id.
+
+    UUID4 is kept (not swapped for an auto-increment int) because job ids
+    are exposed in URLs - sequential ids would let a client enumerate other
+    users' jobs by incrementing a number.
+    """
     job_id = uuid.uuid4().hex
     now = time.time()
     with _cursor() as cur:
@@ -122,10 +143,12 @@ def get_job(job_id: str) -> Optional[JobRecord]:
 
 
 def set_status(job_id: str, status: str, error: Optional[str] = None) -> None:
-    """Update a job's status.
+    """Update a job's status. Pass `error` when transitioning to FAILED.
 
-    Records the completion time automatically when a job finishes or
-    fails, so completed jobs can be tracked and cleaned up later.
+    completed_at is stamped automatically on DONE/FAILED so cleanup can
+    measure "how long has this been sitting finished" without re-deriving
+    it from updated_at (which would be wrong if something touched the row
+    again after completion, e.g. result_downloaded_at).
     """
     now = time.time()
     completed_at = now if status in (STATUS_DONE, STATUS_FAILED) else None
@@ -148,10 +171,9 @@ def set_status(job_id: str, status: str, error: Optional[str] = None) -> None:
 
 
 def mark_result_downloaded(job_id: str) -> None:
-    """Record when a job's result is first downloaded.
-    Used by the cleanup process to identify jobs whose results have already
-    been retrieved.
-    """
+    """Record the first time a client fetches the result. Used by the
+    cleanup policy to optionally delete jobs sooner once the result has
+    actually been retrieved, instead of always waiting the full TTL."""
     with _cursor() as cur:
         cur.execute(
             """
@@ -182,9 +204,14 @@ def find_cleanup_candidates(
     done_after_seconds: float,
     abandoned_after_seconds: float,
 ) -> list[JobRecord]:
-    """Return jobs that are eligible for cleanup.
-    Includes completed, failed, and abandoned jobs that have exceeded the
-    configured cleanup time.
+    """Return every job eligible for deletion under the cleanup policy.
+
+    Three independent conditions (see cleanup.py for the policy reasoning):
+      - FAILED and finished more than `failed_after_seconds` ago
+      - DONE and finished more than `done_after_seconds` ago
+      - Stuck in CREATED/UPLOADING/QUEUED/RUNNING with no update for more
+        than `abandoned_after_seconds` (upload started and never finished,
+        or the process died mid-job and never reached DONE/FAILED)
     """
     now = time.time()
     with _cursor() as cur:

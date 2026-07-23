@@ -1,8 +1,9 @@
 """
-Job management API endpoints.
+Job status and result endpoints.
 
-Provide endpoints for checking job status, retrieving completed results,
-and listing benchmark jobs.
+Allows clients to check job status, fetch completed results, and list jobs.
+result_downloaded_at tracks when a result is first fetched so completed jobs
+can be cleaned up sooner.
 """
 
 import json
@@ -18,7 +19,13 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
 def _json_safe(value):
-    """Recursively replace NaN/Infinity with None."""
+    """
+    Recursively replace NaN and Infinity values with None.
+
+    Metric calculations can produce NaN or Infinity, which are valid Python values
+    but invalid in strict JSON. Converting them to None ensures FastAPI can safely
+    serialize the result as JSON without errors.
+    """
     if isinstance(value, float):
         return None if (math.isnan(value) or math.isinf(value)) else value
     if isinstance(value, dict):
@@ -61,8 +68,10 @@ def get_result(job_id: str):
 
     result_path = JobManager.get_result_path(job_id)
     if not result_path.exists():
-        # Job is marked as complete, but the result file is missing.
-        # This indicates an inconsistent job state.
+        # Status says DONE but the file is missing - a data-integrity gap
+        # worth surfacing distinctly rather than a generic 404, since it
+        # points at a bug (e.g. cleanup ran ahead of a status check) rather
+        # than "wrong job id".
         raise HTTPException(status_code=500, detail="Result file missing for a completed job")
 
     job_store.mark_result_downloaded(job_id)
@@ -75,7 +84,9 @@ def get_result(job_id: str):
 
 @router.get("")
 def list_jobs(status: str | None = None, limit: int = 100):
-    """List benchmark jobs for the dashboard."""
+    """Lightweight admin/dashboard listing. No pagination cursor yet -
+    fine at the job volumes this service currently handles; add one if
+    the jobs table grows enough for `limit` to start mattering."""
     records = job_store.list_jobs(status=status, limit=limit)
     return [
         {
