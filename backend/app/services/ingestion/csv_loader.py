@@ -12,6 +12,9 @@ class CSVLoader:
 
         start = time.perf_counter()
 
+        # Set memory cap and allow disk spilling during CSV reading
+        conn.execute("SET max_memory = '384MB';")
+
         conn.execute(f"""
             CREATE OR REPLACE TABLE
             {table_name}
@@ -43,6 +46,8 @@ class CSVLoader:
         table_name: str,
         conn
     ):
+        # 1. ADDED: Set memory ceiling before executing heavy window functions
+        conn.execute("SET max_memory = '384MB';")
 
         gap_tables = {
 
@@ -111,6 +116,9 @@ class CSVLoader:
                     table_name=table_name
                 )}
             """)
+
+            # 2. ADDED: Force DuckDB to flush RAM cache and persist data immediately
+            # conn.execute("CHECKPOINT;")
 
             print(
                 f"Created "

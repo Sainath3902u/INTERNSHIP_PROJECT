@@ -1,0 +1,137 @@
+{
+  "overall": {
+    "avg": 0.0209,
+    "median": 0.0209,
+    "min": 0.0209,
+    "max": 0.0209,
+    "std": 0.0,
+    "count": 1
+  },
+  "percentiles": {
+    "5": 0.0209,
+    "10": 0.0209,
+    "20": 0.0209,
+    "25": 0.0209,
+    "30": 0.0209,
+    "40": 0.0209,
+    "50": 0.0209,
+    "60": 0.0209,
+    "70": 0.0209,
+    "75": 0.0209,
+    "80": 0.0209,
+    "90": 0.0209,
+    "95": 0.0209
+  },
+  "by_category": {
+    "flow_srcip": {
+      "avg": 0.0209,
+      "min": 0.0209,
+      "max": 0.0209,
+      "count": 1
+    }
+  },
+  "by_metric_type": {
+    "topnvalue": {
+      "avg": 0.0209,
+      "min": 0.0209,
+      "max": 0.0209,
+      "count": 1
+    }
+  },
+  "best_5": [
+    {
+      "query_id": "SI-PKT",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Number of packets per source IP",
+      "metric": "flow_srcip_stateless_packet_topnvalue",
+      "score": 0.0209,
+      "visualization": {
+        "type": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          937567.0,
+          363138.0,
+          312707.0,
+          238857.0,
+          208417.0,
+          203944.0,
+          201222.0,
+          147434.0,
+          139066.0,
+          121597.0
+        ],
+        "synthetic": [
+          1048129.0,
+          364132.0,
+          306214.0,
+          249045.0,
+          220210.0,
+          212116.0,
+          196214.0,
+          153241.0,
+          134003.0,
+          127315.0
+        ]
+      }
+    }
+  ],
+  "worst_5": [
+    {
+      "query_id": "SI-PKT",
+      "query_section": "Flow Level Stateless",
+      "query_description": "Number of packets per source IP",
+      "metric": "flow_srcip_stateless_packet_topnvalue",
+      "score": 0.0209,
+      "visualization": {
+        "type": "topn",
+        "labels": [
+          "Rank 1",
+          "Rank 2",
+          "Rank 3",
+          "Rank 4",
+          "Rank 5",
+          "Rank 6",
+          "Rank 7",
+          "Rank 8",
+          "Rank 9",
+          "Rank 10"
+        ],
+        "real": [
+          937567.0,
+          363138.0,
+          312707.0,
+          238857.0,
+          208417.0,
+          203944.0,
+          201222.0,
+          147434.0,
+          139066.0,
+          121597.0
+        ],
+        "synthetic": [
+          1048129.0,
+          364132.0,
+          306214.0,
+          249045.0,
+          220210.0,
+          212116.0,
+          196214.0,
+          153241.0,
+          134003.0,
+          127315.0
+        ]
+      }
+    }
+  ]
+}

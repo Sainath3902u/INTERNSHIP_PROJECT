@@ -1,0 +1,54 @@
+[
+  {
+    "query_id": "SI-PKT",
+    "query_section": "Flow Level Stateless",
+    "query_description": "Number of packets per source IP",
+    "sql": "SELECT srcip, COUNT(*) AS pkts FROM {table_name} GROUP BY srcip ORDER BY pkts DESC",
+    "metrics": [
+      {
+        "metric": "flow_srcip_stateless_packet_topnvalue",
+        "score": 0.0209,
+        "visualization": {
+          "type": "topn",
+          "labels": [
+            "Rank 1",
+            "Rank 2",
+            "Rank 3",
+            "Rank 4",
+            "Rank 5",
+            "Rank 6",
+            "Rank 7",
+            "Rank 8",
+            "Rank 9",
+            "Rank 10"
+          ],
+          "real": [
+            937567.0,
+            363138.0,
+            312707.0,
+            238857.0,
+            208417.0,
+            203944.0,
+            201222.0,
+            147434.0,
+            139066.0,
+            121597.0
+          ],
+          "synthetic": [
+            1048129.0,
+            364132.0,
+            306214.0,
+            249045.0,
+            220210.0,
+            212116.0,
+            196214.0,
+            153241.0,
+            134003.0,
+            127315.0
+          ]
+        }
+      }
+    ],
+    "query_exec_time_sec": 0.3799
+  }
+]
